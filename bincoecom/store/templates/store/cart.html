@@ -1,0 +1,125 @@
+{% extends 'layout.html' %}
+{% block title %}Shopping Cart – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <h2 class="page-title"><i class="fas fa-shopping-cart me-2"></i>Shopping Cart</h2>
+
+    {% if items %}
+    <div class="row g-4">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="cart-table">
+                {% for item in items %}
+                <div class="cart-row">
+                    <div class="cart-img">
+                        {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                        {% else %}
+                        <div class="no-image small"><i class="fas fa-image"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="cart-details">
+                        <h4><a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a></h4>
+                        {% if item.product.category %}<span class="product-cat">{{ item.product.category.name }}</span>{% endif %}
+                        <span class="unit-price">৳{{ item.product.effective_price }} each</span>
+                    </div>
+                    <div class="cart-qty">
+                        {% if cart %}
+                        <form method="POST" action="{% url 'update_cart' item.id %}" class="qty-form">
+                            {% csrf_token %}
+                            <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}" class="qty-btn">−</button>
+                            <span class="qty-num">{{ item.quantity }}</span>
+                            <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}" class="qty-btn">+</button>
+                        </form>
+                        {% else %}
+                        <span class="qty-num">{{ item.quantity }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="cart-subtotal">৳{{ item.subtotal }}</div>
+                    {% if cart %}
+                    <div class="cart-remove">
+                        <a href="{% url 'remove_from_cart' item.id %}" class="remove-btn" title="Remove">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Coupon -->
+            {% if cart %}
+            <div class="coupon-section">
+                <h5><i class="fas fa-tag me-2"></i>Have a Coupon?</h5>
+                {% if coupon_code %}
+                <div class="coupon-applied">
+                    <span>✅ Coupon "<strong>{{ coupon_code }}</strong>" applied – {{ discount_percent }}% off!</span>
+                    <a href="{% url 'remove_coupon' %}" class="remove-coupon">Remove</a>
+                </div>
+                {% else %}
+                <form method="POST" action="{% url 'apply_coupon' %}" class="coupon-form">
+                    {% csrf_token %}
+                    <input type="text" name="coupon_code" placeholder="Enter coupon code" class="coupon-input">
+                    <button type="submit" class="btn-coupon">Apply</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="cart-continue">
+                <a href="{% url 'product_list' %}" class="btn-continue">
+                    <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                </a>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="order-summary-card">
+                <h4>Order Summary</h4>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    {% if cart %}
+                    <span>৳{{ cart.total }}</span>
+                    {% else %}
+                    <span>৳{{ final_total }}</span>
+                    {% endif %}
+                </div>
+                {% if discount_amount %}
+                <div class="summary-row discount">
+                    <span>Discount</span>
+                    <span>–৳{{ discount_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span class="free-ship">Free</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span>৳{{ final_total|floatformat:2 }}</span>
+                </div>
+                {% if cart %}
+                <a href="{% url 'checkout' %}" class="btn-checkout">
+                    <i class="fas fa-lock me-2"></i>Proceed to Checkout
+                </a>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn-checkout">Login to Checkout</a>
+                {% endif %}
+                <div class="secure-badges">
+                    <i class="fas fa-shield-alt"></i> Secure & encrypted checkout
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-shopping-cart"></i>
+        <h3>Your cart is empty</h3>
+        <p>Looks like you haven't added anything yet.</p>
+        <a href="{% url 'product_list' %}" class="btn-shop mt-3">Start Shopping</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

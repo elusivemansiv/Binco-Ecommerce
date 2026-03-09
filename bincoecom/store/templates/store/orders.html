@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block title %}My Orders – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <h2 class="page-title"><i class="fas fa-box me-2"></i>My Orders</h2>
+    {% if orders %}
+    <div class="orders-table-wrap">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                    <td>{{ order.items.count }} item(s)</td>
+                    <td>৳{{ order.final_total }}</td>
+                    <td>{{ order.get_payment_method_display }}</td>
+                    <td><span class="badge-status {{ order.status }}">{{ order.get_status_display }}</span></td>
+                    <td><a href="{% url 'order_detail' order.id %}" class="btn-view-order">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-box-open"></i>
+        <h3>No orders yet</h3>
+        <p>Once you place an order, it will appear here.</p>
+        <a href="{% url 'product_list' %}" class="btn-shop mt-3">Start Shopping</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

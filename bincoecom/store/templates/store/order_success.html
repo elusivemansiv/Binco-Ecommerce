@@ -1,0 +1,39 @@
+{% extends 'layout.html' %}
+{% block title %}Order Confirmed – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="success-page">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h1>Order Placed Successfully! 🎉</h1>
+        <p class="success-sub">Thank you, <strong>{{ order.full_name }}</strong>! Your order #{{ order.id }} has been confirmed.</p>
+
+        <div class="order-summary-card mx-auto" style="max-width:600px">
+            <h4>Order Details</h4>
+            <div class="summary-row"><span>Order ID</span><span>#{{ order.id }}</span></div>
+            <div class="summary-row"><span>Status</span><span class="badge-status {{ order.status }}">{{ order.get_status_display }}</span></div>
+            <div class="summary-row"><span>Payment</span><span>{{ order.get_payment_method_display }}</span></div>
+            <div class="summary-row"><span>Ship To</span><span>{{ order.city }}</span></div>
+            <hr>
+            {% for item in order.items.all %}
+            <div class="checkout-item">
+                <span>{{ item.product_name }} ×{{ item.quantity }}</span>
+                <span>৳{{ item.subtotal }}</span>
+            </div>
+            {% endfor %}
+            <hr>
+            <div class="summary-row total">
+                <span>Total Paid</span>
+                <span>৳{{ order.final_total }}</span>
+            </div>
+        </div>
+
+        <div class="success-actions mt-4">
+            <a href="{% url 'order_detail' order.id %}" class="btn-checkout">View Order</a>
+            <a href="{% url 'home' %}" class="btn-continue ms-3">Continue Shopping</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

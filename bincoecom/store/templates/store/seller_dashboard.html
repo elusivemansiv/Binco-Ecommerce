@@ -1,0 +1,87 @@
+{% extends 'layout.html' %}
+{% block title %}Seller Dashboard – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="seller-header">
+        <div>
+            <h2><i class="fas fa-store me-2"></i>Seller Dashboard</h2>
+            <p>Welcome, <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>!</p>
+        </div>
+        <a href="{% url 'add_product' %}" class="btn-add-product">
+            <i class="fas fa-plus me-2"></i>List New Product
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="seller-stats">
+        <div class="stat-box">
+            <i class="fas fa-box"></i>
+            <span class="stat-num">{{ products.count }}</span>
+            <span>Products Listed</span>
+        </div>
+        <div class="stat-box">
+            <i class="fas fa-shopping-bag"></i>
+            <span class="stat-num">{{ orders_count }}</span>
+            <span>Orders Received</span>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    <h4 class="mt-4 mb-3">My Products</h4>
+    {% if products %}
+    <div class="orders-table-wrap">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Featured</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" class="seller-thumb" alt="">
+                        {% else %}
+                        <div class="no-image tiny"><i class="fas fa-image"></i></div>
+                        {% endif %}
+                    </td>
+                    <td><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></td>
+                    <td>{{ product.category.name|default:'–' }}</td>
+                    <td>
+                        ৳{{ product.price }}
+                        {% if product.discount_price %}<span class="text-danger ms-1">→ ৳{{ product.discount_price }}</span>{% endif %}
+                    </td>
+                    <td>{{ product.stock }}</td>
+                    <td>{% if product.is_featured %}<span class="badge bg-warning text-dark">Yes</span>{% else %}No{% endif %}</td>
+                    <td class="action-btns">
+                        <a href="{% url 'edit_product' product.id %}" class="btn-edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'delete_product' product.id %}" class="btn-del"
+                           onclick="return confirm('Delete this product?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-box-open"></i>
+        <h3>No products listed yet</h3>
+        <p>Start selling by listing your first product!</p>
+        <a href="{% url 'add_product' %}" class="btn-shop mt-3">Add Product</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

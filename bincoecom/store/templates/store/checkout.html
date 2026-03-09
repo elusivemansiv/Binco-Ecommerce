@@ -1,0 +1,116 @@
+{% extends 'layout.html' %}
+{% block title %}Checkout – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <h2 class="page-title"><i class="fas fa-lock me-2"></i>Checkout</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row g-4">
+            <!-- Shipping Info -->
+            <div class="col-lg-7">
+                <div class="checkout-card">
+                    <h4>📦 Shipping Information</h4>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" name="full_name" class="form-control" required
+                                   value="{{ profile.user.get_full_name|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" class="form-control" required
+                                   value="{{ profile.user.email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone *</label>
+                            <input type="text" name="phone" class="form-control" required
+                                   value="{{ profile.phone }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Address *</label>
+                            <textarea name="address" class="form-control" rows="2" required>{{ profile.address }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">City *</label>
+                            <input type="text" name="city" class="form-control" required
+                                   value="{{ profile.city }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Postal Code</label>
+                            <input type="text" name="postal_code" class="form-control"
+                                   value="{{ profile.postal_code }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkout-card mt-4">
+                    <h4>💳 Payment Method</h4>
+                    <div class="payment-options">
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="cod" checked>
+                            <div class="payment-box">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Cash on Delivery</span>
+                            </div>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="mobile">
+                            <div class="payment-box">
+                                <i class="fas fa-mobile-alt"></i>
+                                <span>Mobile Banking</span>
+                            </div>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="card">
+                            <div class="payment-box">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Card Payment</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-5">
+                <div class="order-summary-card sticky-top">
+                    <h4>Order Summary</h4>
+                    {% for item in items %}
+                    <div class="checkout-item">
+                        <span class="checkout-item-name">{{ item.product.name }} <em>×{{ item.quantity }}</em></span>
+                        <span>৳{{ item.subtotal }}</span>
+                    </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>৳{{ total }}</span>
+                    </div>
+                    {% if discount_amount %}
+                    <div class="summary-row discount">
+                        <span>Discount</span>
+                        <span>–৳{{ discount_amount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="summary-row">
+                        <span>Shipping</span>
+                        <span class="free-ship">Free</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span>৳{{ final_total|floatformat:2 }}</span>
+                    </div>
+                    <button type="submit" class="btn-checkout">
+                        <i class="fas fa-check-circle me-2"></i>Place Order
+                    </button>
+                    <div class="secure-badges">
+                        <i class="fas fa-shield-alt"></i> Your data is safe with us
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

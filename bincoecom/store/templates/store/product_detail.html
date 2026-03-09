@@ -1,0 +1,224 @@
+{% extends 'layout.html' %}
+{% block title %}{{ product.name }} – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav">
+        <a href="{% url 'home' %}">Home</a> /
+        <a href="{% url 'product_list' %}">Products</a> /
+        {% if product.category %}
+        <a href="{% url 'product_list' %}?category={{ product.category.slug }}">{{ product.category.name }}</a> /
+        {% endif %}
+        <span>{{ product.name }}</span>
+    </nav>
+
+    <div class="row g-5 mt-2">
+        <!-- ===== PRODUCT IMAGES ===== -->
+        <div class="col-lg-5">
+            <div class="product-detail-images">
+                <div class="main-image-wrap">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="main-product-img" id="mainImg">
+                    {% else %}
+                    <div class="no-image large"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                </div>
+                {% if extra_images %}
+                <div class="thumbnail-row">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" class="thumb active" onclick="setMain(this, '{{ product.image.url }}')">
+                    {% endif %}
+                    {% for img in extra_images %}
+                    <img src="{{ img.image.url }}" class="thumb" onclick="setMain(this, '{{ img.image.url }}')">
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ===== PRODUCT INFO ===== -->
+        <div class="col-lg-7">
+            <div class="product-detail-info">
+                {% if product.category %}
+                <a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="product-cat mb-2 d-inline-block">
+                    {{ product.category.name }}
+                </a>
+                {% endif %}
+
+                <h1 class="detail-title">{{ product.name }}</h1>
+
+                <!-- Rating -->
+                <div class="detail-rating">
+                    <div class="stars">
+                        {% with rating=product.average_rating %}
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= rating %}<i class="fas fa-star"></i>
+                            {% else %}<i class="far fa-star"></i>{% endif %}
+                        {% endfor %}
+                        <span class="rating-num">{{ rating }}</span>
+                        {% endwith %}
+                    </div>
+                    <span class="review-count">{{ product.reviews.count }} reviews</span>
+                    <span class="dot">•</span>
+                    {% if product.stock > 0 %}
+                    <span class="in-stock"><i class="fas fa-check-circle"></i> In Stock ({{ product.stock }})</span>
+                    {% else %}
+                    <span class="out-stock"><i class="fas fa-times-circle"></i> Out of Stock</span>
+                    {% endif %}
+                </div>
+
+                <!-- Price -->
+                <div class="detail-price">
+                    {% if product.discount_price %}
+                    <span class="dp-current">৳{{ product.discount_price }}</span>
+                    <span class="dp-old">৳{{ product.price }}</span>
+                    <span class="dp-badge">Save {{ product.discount_percent }}%</span>
+                    {% else %}
+                    <span class="dp-current">৳{{ product.price }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="detail-desc">
+                    <p>{{ product.description }}</p>
+                </div>
+
+                <!-- Seller -->
+                {% if product.seller %}
+                <div class="seller-info">
+                    <i class="fas fa-store me-2"></i>
+                    <span>Sold by <strong>{{ product.seller.get_full_name|default:product.seller.username }}</strong></span>
+                </div>
+                {% endif %}
+
+                <!-- Add to Cart -->
+                <div class="detail-actions">
+                    {% if product.stock > 0 %}
+                    <a href="{% url 'add_to_cart' product.id %}" class="btn-add-cart-lg">
+                        <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                    </a>
+                    {% else %}
+                    <button class="btn-add-cart-lg disabled" disabled>Out of Stock</button>
+                    {% endif %}
+                    <a href="{% url 'add_to_wishlist' product.id %}" class="btn-wishlist-lg">
+                        <i class="fas fa-heart me-2"></i>Wishlist
+                    </a>
+                </div>
+
+                <!-- Delivery Info -->
+                <div class="delivery-info">
+                    <div class="delivery-item"><i class="fas fa-truck"></i> Free delivery on orders over ৳999</div>
+                    <div class="delivery-item"><i class="fas fa-undo"></i> Easy 30-day returns</div>
+                    <div class="delivery-item"><i class="fas fa-shield-alt"></i> Secure payment</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== REVIEWS ===== -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="reviews-section">
+                <h3 class="reviews-title">Customer Reviews</h3>
+                <div class="reviews-summary">
+                    <span class="big-rating">{{ product.average_rating }}</span>
+                    <div>
+                        <div class="stars big-stars">
+                            {% with rating=product.average_rating %}
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= rating %}<i class="fas fa-star"></i>
+                                {% else %}<i class="far fa-star"></i>{% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                        </div>
+                        <span>Based on {{ product.reviews.count }} reviews</span>
+                    </div>
+                </div>
+
+                {% for review in reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-avatar">{{ review.user.username|first|upper }}</div>
+                        <div>
+                            <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+                            <div class="review-stars">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                    <i class="fas fa-star"></i>
+                                    {% else %}
+                                    <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <p class="review-comment">{{ review.comment }}</p>
+                </div>
+                {% empty %}
+                <p class="no-reviews">No reviews yet. Be the first to review!</p>
+                {% endfor %}
+
+                <!-- Write Review -->
+                {% if user.is_authenticated and not user_reviewed %}
+                <div class="write-review">
+                    <h4>Write a Review</h4>
+                    <form method="POST" action="{% url 'submit_review' product.id %}">
+                        {% csrf_token %}
+                        <div class="star-rating-input">
+                            <label>Your Rating:</label>
+                            {% for i in "54321" %}
+                            <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" {% if forloop.first %}checked{% endif %}>
+                            <label for="star{{ i }}"><i class="fas fa-star"></i></label>
+                            {% endfor %}
+                        </div>
+                        <textarea name="comment" rows="4" class="review-textarea" placeholder="Share your experience with this product..."></textarea>
+                        <button type="submit" class="btn-submit-review">Submit Review</button>
+                    </form>
+                </div>
+                {% elif not user.is_authenticated %}
+                <p class="login-to-review"><a href="{% url 'login' %}">Sign in</a> to write a review.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== RELATED PRODUCTS ===== -->
+    {% if related %}
+    <div class="related-section mt-5">
+        <h3>Related Products</h3>
+        <div class="products-grid mt-3">
+            {% for p in related %}
+            <div class="product-card">
+                <a href="{% url 'product_detail' p.id %}" class="product-img-wrap">
+                    {% if p.image %}<img src="{{ p.image.url }}" alt="{{ p.name }}" loading="lazy">
+                    {% else %}<div class="no-image"><i class="fas fa-image"></i></div>{% endif %}
+                </a>
+                <div class="product-info">
+                    <h3 class="product-name"><a href="{% url 'product_detail' p.id %}">{{ p.name }}</a></h3>
+                    <div class="product-price">
+                        {% if p.discount_price %}
+                        <span class="price-current">৳{{ p.discount_price }}</span>
+                        <span class="price-old">৳{{ p.price }}</span>
+                        {% else %}
+                        <span class="price-current">৳{{ p.price }}</span>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'add_to_cart' p.id %}" class="btn-add-cart"><i class="fas fa-cart-plus"></i> Add to Cart</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function setMain(el, src) {
+    document.getElementById('mainImg').src = src;
+    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}
+</script>
+{% endblock %}

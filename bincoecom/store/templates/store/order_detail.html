@@ -1,0 +1,59 @@
+{% extends 'layout.html' %}
+{% block title %}Order #{{ order.id }} – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="order-detail-card">
+                <div class="order-detail-header">
+                    <div>
+                        <h2>Order #{{ order.id }}</h2>
+                        <p>Placed on {{ order.created_at|date:"F d, Y \a\t g:i A" }}</p>
+                    </div>
+                    <span class="badge-status {{ order.status }} large">{{ order.get_status_display }}</span>
+                </div>
+                <!-- Timeline -->
+                <div class="order-timeline">
+                    {% for step, label in order.STATUS_CHOICES %}
+                    <div class="timeline-step {% if order.status == step %}active{% elif order.status == 'delivered' or order.status == 'shipped' and step == 'pending' or step == 'processing' %}done{% endif %}">
+                        <div class="timeline-dot"></div>
+                        <span>{{ label }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <h4 class="mt-4 mb-3">Items Ordered</h4>
+                {% for item in order.items.all %}
+                <div class="checkout-item">
+                    <span>{{ item.product_name }} <em>×{{ item.quantity }}</em></span>
+                    <span>৳{{ item.subtotal }}</span>
+                </div>
+                {% endfor %}
+                <hr>
+                <div class="summary-row"><span>Subtotal</span><span>৳{{ order.total_price }}</span></div>
+                {% if order.discount_amount %}
+                <div class="summary-row discount"><span>Discount</span><span>–৳{{ order.discount_amount }}</span></div>
+                {% endif %}
+                <div class="summary-row"><span>Shipping</span><span class="free-ship">Free</span></div>
+                <div class="summary-row total"><span>Total</span><span>৳{{ order.final_total }}</span></div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h5>Shipping Address</h5>
+                        <p>{{ order.full_name }}<br>{{ order.address }}<br>{{ order.city }} {{ order.postal_code }}<br>📞 {{ order.phone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Payment Method</h5>
+                        <p>{{ order.get_payment_method_display }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{% url 'order_history' %}" class="btn-continue">← My Orders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

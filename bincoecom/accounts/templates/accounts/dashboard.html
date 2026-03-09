@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+{% block title %}My Dashboard – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="dashboard-grid">
+        <!-- Sidebar -->
+        <div class="dash-sidebar">
+            <div class="dash-user-card">
+                {% if request.user.profile.profile_pic %}
+                <img src="{{ request.user.profile.profile_pic.url }}" class="dash-avatar" alt="">
+                {% else %}
+                <div class="dash-avatar-placeholder">{{ request.user.username|first|upper }}</div>
+                {% endif %}
+                <h4>{{ request.user.get_full_name|default:request.user.username }}</h4>
+                <span class="text-muted small">{{ request.user.email }}</span>
+                {% if request.user.profile.is_seller %}
+                <span class="seller-badge mt-2"><i class="fas fa-store me-1"></i>Seller</span>
+                {% endif %}
+            </div>
+            <nav class="dash-nav">
+                <a href="{% url 'dashboard' %}" class="active"><i class="fas fa-tachometer-alt"></i>Dashboard</a>
+                <a href="{% url 'order_history' %}"><i class="fas fa-box"></i>My Orders</a>
+                <a href="{% url 'wishlist' %}"><i class="fas fa-heart"></i>Wishlist</a>
+                <a href="{% url 'profile_edit' %}"><i class="fas fa-user-edit"></i>Edit Profile</a>
+                {% if request.user.profile.is_seller %}
+                <a href="{% url 'seller_dashboard' %}"><i class="fas fa-store"></i>Seller Dashboard</a>
+                {% elif request.user.profile.is_seller_pending %}
+                <span class="dash-nav-item text-warning ps-3 py-2 d-block"><i class="fas fa-clock me-2"></i>Seller Approval Pending</span>
+                {% else %}
+                <a href="{% url 'become_seller' %}"><i class="fas fa-handshake"></i>Become a Seller</a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="logout-link"><i class="fas fa-sign-out-alt"></i>Logout</a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="dash-main">
+            <!-- Stats -->
+            <div class="dash-stats">
+                <div class="dash-stat-card">
+                    <i class="fas fa-box"></i>
+                    <span class="stat-num">{{ total_orders }}</span>
+                    <span>Total Orders</span>
+                </div>
+                <div class="dash-stat-card">
+                    <i class="fas fa-heart"></i>
+                    <span class="stat-num">{{ wishlist.products.count }}</span>
+                    <span>Wishlist Items</span>
+                </div>
+                <div class="dash-stat-card">
+                    <i class="fas fa-star"></i>
+                    <span class="stat-num">{{ request.user.reviews.count }}</span>
+                    <span>Reviews Given</span>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="dash-section mt-4">
+                <div class="section-header">
+                    <h4>Recent Orders</h4>
+                    <a href="{% url 'order_history' %}" class="see-all">View All</a>
+                </div>
+                {% if orders %}
+                <div class="orders-table-wrap">
+                    <table class="orders-table">
+                        <thead>
+                            <tr><th>#</th><th>Date</th><th>Total</th><th>Status</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                <td>৳{{ order.final_total }}</td>
+                                <td><span class="badge-status {{ order.status }}">{{ order.get_status_display }}</span></td>
+                                <td><a href="{% url 'order_detail' order.id %}" class="btn-view-order">View</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No orders yet. <a href="{% url 'product_list' %}">Start shopping!</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

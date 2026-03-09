@@ -1,0 +1,80 @@
+{% extends 'layout.html' %}
+{% block title %}Edit Profile – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="checkout-card">
+                <h3><i class="fas fa-user-edit me-2"></i>Edit Profile</h3>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="text-center mb-4">
+                        {% if profile.profile_pic %}
+                        <img src="{{ profile.profile_pic.url }}" class="profile-pic-preview" id="picPreview">
+                        {% else %}
+                        <div class="profile-pic-placeholder" id="picPreview">{{ profile.user.username|first|upper }}</div>
+                        {% endif %}
+                        <div class="mt-2">
+                            <label for="profile_pic" class="btn-continue" style="cursor:pointer;">
+                                <i class="fas fa-camera me-1"></i> Change Photo
+                            </label>
+                            <input id="profile_pic" type="file" name="profile_pic" accept="image/*" hidden onchange="previewPic(this)">
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ profile.user.first_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ profile.user.last_name }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ profile.user.email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ profile.phone }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">City</label>
+                            <input type="text" name="city" class="form-control" value="{{ profile.city }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" class="form-control" rows="2">{{ profile.address }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Postal Code</label>
+                            <input type="text" name="postal_code" class="form-control" value="{{ profile.postal_code }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Bio</label>
+                            <textarea name="bio" class="form-control" rows="2" placeholder="Tell us something about yourself...">{{ profile.bio }}</textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-3">
+                        <button type="submit" class="btn-checkout">Save Changes</button>
+                        <a href="{% url 'dashboard' %}" class="btn-continue">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function previewPic(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const prev = document.getElementById('picPreview');
+            prev.src ? (prev.src = e.target.result) : (prev.textContent = '');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

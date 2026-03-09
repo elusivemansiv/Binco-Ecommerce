@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block title %}Create Account – Binco{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo"><span class="logo-bi">Bin</span><span class="logo-nco">co</span></div>
+            <h2>Create Your Account</h2>
+            <p>Join millions of buyers and sellers</p>
+        </div>
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control" placeholder="First name">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control" placeholder="Last name">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Username *</label>
+                    <input type="text" name="username" class="form-control" placeholder="Choose a username" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Password *</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Confirm Password *</label>
+                    <input type="password" name="confirm_password" class="form-control" placeholder="••••••••" required>
+                </div>
+            </div>
+            <button type="submit" class="auth-btn mt-4">Create Account</button>
+            <p class="auth-switch mt-3">Already have an account? <a href="{% url 'login' %}">Sign In</a></p>
+        </form>
+    </div>
+</div>
+{% endblock %}

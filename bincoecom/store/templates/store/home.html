@@ -1,0 +1,241 @@
+{% extends 'layout.html' %}
+{% block title %}Binco – Buy & Sell Everything{% endblock %}
+
+{% block content %}
+<!-- ========== HERO ========== -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <span class="hero-badge">🎉 New Arrivals Every Day</span>
+                <h1>Shop the Best Deals<br>on <span class="highlight">Everything</span></h1>
+                <p>From electronics to fashion — millions of items at unbeatable prices. Buy & sell with confidence.</p>
+                <div class="hero-actions">
+                    <a href="{% url 'product_list' %}" class="btn-shop">Shop Now <i class="fas fa-arrow-right"></i></a>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'register' %}" class="btn-sell">Start Selling</a>
+                    {% else %}
+                    <a href="{% url 'seller_dashboard' %}" class="btn-sell">Sell Items</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <span class="stat-num">50K+</span>
+                    <span class="stat-label">Products</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-num">10K+</span>
+                    <span class="stat-label">Sellers</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-num">100K+</span>
+                    <span class="stat-label">Buyers</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== CATEGORIES ========== -->
+{% if all_categories %}
+<section class="section-block">
+    <div class="container">
+        <div class="section-header">
+            <h2>Shop by Category</h2>
+            <a href="{% url 'product_list' %}" class="see-all">See All <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="categories-grid">
+            {% for cat in all_categories %}
+            <a href="{% url 'product_list' %}?category={{ cat.slug }}" class="category-card">
+                <div class="cat-icon">
+                    {% if cat.icon %}<i class="{{ cat.icon }}"></i>
+                    {% else %}<i class="fas fa-tag"></i>{% endif %}
+                </div>
+                <span>{{ cat.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ========== FEATURED PRODUCTS ========== -->
+{% if featured %}
+<section class="section-block bg-light-custom">
+    <div class="container">
+        <div class="section-header">
+            <h2>⭐ Featured Products</h2>
+            <a href="{% url 'product_list' %}" class="see-all">View All <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="products-grid">
+            {% for product in featured %}
+            <div class="product-card">
+                {% if product.discount_price %}
+                <div class="sale-badge">-{{ product.discount_percent }}%</div>
+                {% endif %}
+                <a href="{% url 'product_detail' product.id %}" class="product-img-wrap">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+                    {% else %}
+                    <div class="no-image"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                </a>
+                <div class="product-info">
+                    {% if product.category %}
+                    <span class="product-cat">{{ product.category.name }}</span>
+                    {% endif %}
+                    <h3 class="product-name"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h3>
+                    <div class="product-rating">
+                        {% with rating=product.average_rating %}
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= rating %}<i class="fas fa-star"></i>
+                            {% else %}<i class="far fa-star"></i>{% endif %}
+                        {% endfor %}
+                        <span>({{ product.reviews.count }})</span>
+                        {% endwith %}
+                    </div>
+                    <div class="product-price">
+                        {% if product.discount_price %}
+                        <span class="price-current">৳{{ product.discount_price }}</span>
+                        <span class="price-old">৳{{ product.price }}</span>
+                        {% else %}
+                        <span class="price-current">৳{{ product.price }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="product-actions">
+                        <a href="{% url 'add_to_cart' product.id %}" class="btn-add-cart">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </a>
+                        <a href="{% url 'add_to_wishlist' product.id %}" class="btn-wishlist">
+                            <i class="fas fa-heart"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ========== DEALS BANNER ========== -->
+{% if deals %}
+<section class="section-block deals-section">
+    <div class="container">
+        <div class="deals-header">
+            <div>
+                <h2>🔥 Hot Deals</h2>
+                <p>Limited time offers — grab them before they're gone!</p>
+            </div>
+            <a href="{% url 'product_list' %}?sort=newest" class="see-all light">View All Deals <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="products-grid">
+            {% for product in deals %}
+            <div class="product-card dark-card">
+                <div class="sale-badge">-{{ product.discount_percent }}%</div>
+                <a href="{% url 'product_detail' product.id %}" class="product-img-wrap">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+                    {% else %}
+                    <div class="no-image"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                </a>
+                <div class="product-info">
+                    <h3 class="product-name"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h3>
+                    <div class="product-price">
+                        <span class="price-current">৳{{ product.discount_price }}</span>
+                        <span class="price-old">৳{{ product.price }}</span>
+                    </div>
+                    <div class="product-actions">
+                        <a href="{% url 'add_to_cart' product.id %}" class="btn-add-cart">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </a>
+                        <a href="{% url 'add_to_wishlist' product.id %}" class="btn-wishlist">
+                            <i class="fas fa-heart"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ========== TRUST BADGES ========== -->
+<section class="trust-section">
+    <div class="container">
+        <div class="trust-grid">
+            <div class="trust-item">
+                <i class="fas fa-shipping-fast"></i>
+                <h4>Fast Delivery</h4>
+                <p>Delivered within 2-5 business days</p>
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-shield-alt"></i>
+                <h4>Secure Payment</h4>
+                <p>100% secure transactions</p>
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-undo-alt"></i>
+                <h4>Easy Returns</h4>
+                <p>30-day hassle-free returns</p>
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-headset"></i>
+                <h4>24/7 Support</h4>
+                <p>We're here when you need us</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== TRENDING ========== -->
+{% if trending %}
+<section class="section-block">
+    <div class="container">
+        <div class="section-header">
+            <h2>🆕 New Arrivals</h2>
+            <a href="{% url 'product_list' %}?sort=newest" class="see-all">See All <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="products-grid">
+            {% for product in trending %}
+            <div class="product-card">
+                <a href="{% url 'product_detail' product.id %}" class="product-img-wrap">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+                    {% else %}
+                    <div class="no-image"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                </a>
+                <div class="product-info">
+                    {% if product.category %}
+                    <span class="product-cat">{{ product.category.name }}</span>
+                    {% endif %}
+                    <h3 class="product-name"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h3>
+                    <div class="product-price">
+                        {% if product.discount_price %}
+                        <span class="price-current">৳{{ product.discount_price }}</span>
+                        <span class="price-old">৳{{ product.price }}</span>
+                        {% else %}
+                        <span class="price-current">৳{{ product.price }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="product-actions">
+                        <a href="{% url 'add_to_cart' product.id %}" class="btn-add-cart">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </a>
+                        <a href="{% url 'add_to_wishlist' product.id %}" class="btn-wishlist">
+                            <i class="fas fa-heart"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

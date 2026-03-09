@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+{% block title %}Sign In – Binco{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo"><span class="logo-bi">Bin</span><span class="logo-nco">co</span></div>
+            <h2>Welcome Back!</h2>
+            <p>Sign in to your Binco account</p>
+        </div>
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" placeholder="Enter your username" required autofocus>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="auth-btn">Sign In</button>
+            <p class="auth-switch mt-3">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+        </form>
+    </div>
+</div>
+{% endblock %}
