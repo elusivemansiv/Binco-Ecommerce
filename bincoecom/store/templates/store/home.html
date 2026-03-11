@@ -65,7 +65,7 @@
 <section class="section-block bg-light-custom">
     <div class="container">
         <div class="section-header">
-            <h2>⭐ Featured Products</h2>
+            <h1>⭐ Featured Products</h1>
             <a href="{% url 'product_list' %}" class="see-all">View All <i class="fas fa-chevron-right"></i></a>
         </div>
         <div class="products-grid">
@@ -89,11 +89,11 @@
                     <div class="product-rating">
                         {% with rating=product.average_rating %}
                         {% for i in "12345" %}
-                            {% if forloop.counter <= rating %}<i class="fas fa-star"></i>
+                        {% if forloop.counter <= rating %}<i class="fas fa-star"></i>
                             {% else %}<i class="far fa-star"></i>{% endif %}
-                        {% endfor %}
-                        <span>({{ product.reviews.count }})</span>
-                        {% endwith %}
+                            {% endfor %}
+                            <span>({{ product.reviews.count }})</span>
+                            {% endwith %}
                     </div>
                     <div class="product-price">
                         {% if product.discount_price %}
@@ -128,7 +128,8 @@
                 <h2>🔥 Hot Deals</h2>
                 <p>Limited time offers — grab them before they're gone!</p>
             </div>
-            <a href="{% url 'product_list' %}?sort=newest" class="see-all light">View All Deals <i class="fas fa-arrow-right"></i></a>
+            <a href="{% url 'product_list' %}?sort=newest" class="see-all light">View All Deals <i
+                    class="fas fa-arrow-right"></i></a>
         </div>
         <div class="products-grid">
             {% for product in deals %}
@@ -197,7 +198,8 @@
     <div class="container">
         <div class="section-header">
             <h2>🆕 New Arrivals</h2>
-            <a href="{% url 'product_list' %}?sort=newest" class="see-all">See All <i class="fas fa-chevron-right"></i></a>
+            <a href="{% url 'product_list' %}?sort=newest" class="see-all">See All <i
+                    class="fas fa-chevron-right"></i></a>
         </div>
         <div class="products-grid">
             {% for product in trending %}

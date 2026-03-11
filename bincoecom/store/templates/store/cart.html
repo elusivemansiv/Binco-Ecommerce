@@ -21,7 +21,13 @@
                     </div>
                     <div class="cart-details">
                         <h4><a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a></h4>
-                        {% if item.product.category %}<span class="product-cat">{{ item.product.category.name }}</span>{% endif %}
+                        {% if item.product.category %}<span class="product-cat">{{ item.product.category.name }}</span><br>{% endif %}
+                        {% if item.color or item.size %}
+                        <small class="text-muted">
+                            {% if item.color %}Color: {{ item.color }} {% endif %}
+                            {% if item.size %}Size: {{ item.size }}{% endif %}
+                        </small><br>
+                        {% endif %}
                         <span class="unit-price">৳{{ item.product.effective_price }} each</span>
                     </div>
                     <div class="cart-qty">

@@ -21,16 +21,33 @@ class Category(models.Model):
         return self.name
 
 
+class Color(models.Model):
+    name = models.CharField(max_length=50)
+    code = models.CharField(max_length=50, blank=True, null=True, help_text="Hex code e.g. #FFFFFF")
+
+    def __str__(self):
+        return self.name
+
+
+class Size(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField()
+    colors = models.ManyToManyField(Color, blank=True)
+    sizes = models.ManyToManyField(Size, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
-    stock = models.IntegerField(default=0)
+    stock = models.IntegerField(default=0, help_text="Total stock if no variations, otherwise managed by variations")
     is_featured = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -64,8 +81,32 @@ class Product(models.Model):
             return round(sum(r.rating for r in reviews) / reviews.count(), 1)
         return 0
 
+    @property
+    def total_stock(self):
+        variations = self.variations.all()
+        if variations.exists():
+            if any(v.stock == 0 for v in variations):
+                return 0
+            return sum(v.stock for v in variations)
+        return self.stock
+
     def __str__(self):
         return self.name
+
+
+class ProductVariation(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variations')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True)
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, null=True, blank=True)
+    stock = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('product', 'color', 'size')
+
+    def __str__(self):
+        color_name = self.color.name if self.color else "N/A"
+        size_name = self.size.name if self.size else "N/A"
+        return f"{self.product.name} - {color_name} - {size_name}"
 
 
 class ProductImage(models.Model):
@@ -107,6 +148,8 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+    color = models.CharField(max_length=50, blank=True, null=True)
+    size = models.CharField(max_length=50, blank=True, null=True)
 
     @property
     def subtotal(self):
@@ -167,16 +210,38 @@ class Order(models.Model):
             if self.status == 'cancelled' and self._original_status != 'cancelled':
                 for item in self.items.all():
                     if item.product:
-                        item.product.stock += item.quantity
-                        item.product.save(update_fields=['stock'])
+                        # Restore stock to variation if it exists
+                        variation = ProductVariation.objects.filter(
+                            product=item.product,
+                            color__name=item.color if item.color else None,
+                            size__name=item.size if item.size else None
+                        ).first()
+                        if variation:
+                            variation.stock += item.quantity
+                            variation.save(update_fields=['stock'])
+                        else:
+                            item.product.stock += item.quantity
+                            item.product.save(update_fields=['stock'])
+
             # If the status is changing from cancelled back to something else (uncancelled)
             elif self._original_status == 'cancelled' and self.status != 'cancelled':
                 for item in self.items.all():
                     if item.product:
-                        item.product.stock -= item.quantity
-                        if item.product.stock < 0:
-                            item.product.stock = 0
-                        item.product.save(update_fields=['stock'])
+                        variation = ProductVariation.objects.filter(
+                            product=item.product,
+                            color__name=item.color if item.color else None,
+                            size__name=item.size if item.size else None
+                        ).first()
+                        if variation:
+                            variation.stock -= item.quantity
+                            if variation.stock < 0:
+                                variation.stock = 0
+                            variation.save(update_fields=['stock'])
+                        else:
+                            item.product.stock -= item.quantity
+                            if item.product.stock < 0:
+                                item.product.stock = 0
+                            item.product.save(update_fields=['stock'])
                         
         super().save(*args, **kwargs)
         self._original_status = self.status
@@ -195,6 +260,8 @@ class OrderItem(models.Model):
     product_name = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
+    color = models.CharField(max_length=50, blank=True, null=True)
+    size = models.CharField(max_length=50, blank=True, null=True)
 
     @property
     def subtotal(self):

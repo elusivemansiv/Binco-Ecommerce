@@ -93,6 +93,7 @@ def product_detail(request, product_id):
         'reviews': reviews,
         'related': related,
         'user_reviewed': user_reviewed,
+        'variations': product.variations.all(),
     }
     return render(request, 'store/product_detail.html', context)
 
@@ -169,7 +170,34 @@ def cart_view(request):
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+    
+    color_name = ''
+    size_name = ''
+    if request.method == 'POST':
+        color_name = request.POST.get('color', '')
+        size_name = request.POST.get('size', '')
+
+    # --- Variation Stock Check ---
+    from .models import ProductVariation
+    variation = ProductVariation.objects.filter(
+        product=product,
+        color__name=color_name if color_name else None,
+        size__name=size_name if size_name else None
+    ).first()
+
+    if variation:
+        if variation.stock < 1:
+            messages.error(request, f'Sorry, this variant ({color_name} - {size_name}) is out of stock.')
+            return redirect('product_detail', product_id=product.id)
+    elif product.variations.exists():
+        # If product has variations but none found/selected correctly
+        messages.error(request, 'Please select a valid color and size.')
+        return redirect('product_detail', product_id=product.id)
+    elif product.stock < 1:
+        messages.error(request, f'Sorry, "{product.name}" is out of stock.')
+        return redirect('product_detail', product_id=product.id)
+
+    item, created = CartItem.objects.get_or_create(cart=cart, product=product, color=color_name, size=size_name)
     if not created:
         item.quantity += 1
         item.save()
@@ -181,6 +209,21 @@ def add_to_cart(request, product_id):
 def update_cart(request, item_id):
     item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
     qty = int(request.POST.get('quantity', 1))
+    
+    # Optional: Add stock validation on update
+    from .models import ProductVariation
+    variation = ProductVariation.objects.filter(
+        product=item.product,
+        color__name=item.color if item.color else None,
+        size__name=item.size if item.size else None
+    ).first()
+    
+    current_stock = variation.stock if variation else item.product.stock
+    
+    if qty > current_stock:
+        messages.error(request, f'Only {current_stock} items available.')
+        return redirect('cart')
+
     if qty <= 0:
         item.delete()
         messages.info(request, 'Item removed from cart.')
@@ -212,6 +255,7 @@ def apply_coupon(request):
     return redirect('cart')
 
 
+@login_required(login_url='login')
 def remove_coupon(request):
     request.session.pop('coupon_code', None)
     messages.info(request, 'Coupon removed.')
@@ -245,18 +289,35 @@ def checkout(request):
 
     if request.method == 'POST':
         # --- Stock validation ---
+        from .models import ProductVariation
         for item in items:
-            if item.product.stock < item.quantity:
-                messages.error(request, f'Sorry, "{item.product.name}" only has {item.product.stock} left in stock (you requested {item.quantity}).')
+            variation = ProductVariation.objects.filter(
+                product=item.product,
+                color__name=item.color if item.color else None,
+                size__name=item.size if item.size else None
+            ).first()
+            
+            stock_available = variation.stock if variation else item.product.stock
+            
+            if stock_available < item.quantity:
+                messages.error(request, f'Sorry, "{item.product.name}" variant only has {stock_available} left in stock (you requested {item.quantity}).')
                 return redirect('cart')
 
-        full_name = request.POST.get('full_name', '')
-        email = request.POST.get('email', '')
-        phone = request.POST.get('phone', '')
-        address = request.POST.get('address', '')
-        city = request.POST.get('city', '')
-        postal_code = request.POST.get('postal_code', '')
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        address = request.POST.get('address', '').strip()
+        city = request.POST.get('city', '').strip()
+        postal_code = request.POST.get('postal_code', '').strip()
         payment_method = request.POST.get('payment_method', 'cod')
+
+        if not all([full_name, email, phone, address, city]):
+            messages.error(request, 'Please fill in all required fields (Name, Email, Phone, Address, City).')
+            return redirect('checkout')
+
+        if payment_method != 'cod':
+            messages.error(request, 'Currently, only Cash on Delivery is processable. Other options will be implemented later.')
+            return redirect('checkout')
 
         order = Order.objects.create(
             user=request.user,
@@ -273,8 +334,18 @@ def checkout(request):
         )
         for item in items:
             # Decrease stock
-            item.product.stock -= item.quantity
-            item.product.save(update_fields=['stock'])
+            variation = ProductVariation.objects.filter(
+                product=item.product,
+                color__name=item.color if item.color else None,
+                size__name=item.size if item.size else None
+            ).first()
+            
+            if variation:
+                variation.stock -= item.quantity
+                variation.save(update_fields=['stock'])
+            else:
+                item.product.stock -= item.quantity
+                item.product.save(update_fields=['stock'])
             
             OrderItem.objects.create(
                 order=order,
@@ -282,7 +353,10 @@ def checkout(request):
                 product_name=item.product.name,
                 price=item.product.effective_price,
                 quantity=item.quantity,
+                color=item.color,
+                size=item.size,
             )
+
         if coupon_obj:
             coupon_obj.used_count += 1
             coupon_obj.save()

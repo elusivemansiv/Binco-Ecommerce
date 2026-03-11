@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Category, Product, ProductImage, ProductReview,
-    Cart, CartItem, Coupon, Order, OrderItem, Wishlist
+    Cart, CartItem, Coupon, Order, OrderItem, Wishlist,
+    Color, Size, ProductVariation
 )
 
 
@@ -11,19 +12,35 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 
+@admin.register(Color)
+class ColorAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code')
+
+
+@admin.register(Size)
+class SizeAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
+
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
 
 
+class ProductVariationInline(admin.TabularInline):
+    model = ProductVariation
+    extra = 1
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'seller', 'category', 'price', 'discount_price', 'stock', 'is_featured', 'is_active', 'created_at')
+    list_display = ('name', 'seller', 'category', 'price', 'discount_price', 'total_stock', 'is_featured', 'is_active', 'created_at')
     list_filter = ('is_featured', 'is_active', 'category')
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
-    inlines = [ProductImageInline]
-    list_editable = ('is_featured', 'is_active', 'stock')
+    inlines = [ProductImageInline, ProductVariationInline]
+    list_editable = ('is_featured', 'is_active')
+    filter_horizontal = ('colors', 'sizes')
 
 
 @admin.register(ProductReview)

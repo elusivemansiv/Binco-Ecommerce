@@ -55,18 +55,18 @@
                                 <span>Cash on Delivery</span>
                             </div>
                         </label>
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="mobile">
-                            <div class="payment-box">
+                        <label class="payment-option text-muted" style="cursor:not-allowed;" title="Coming Soon">
+                            <input type="radio" name="payment_method" value="mobile" disabled>
+                            <div class="payment-box bg-light">
                                 <i class="fas fa-mobile-alt"></i>
-                                <span>Mobile Banking</span>
+                                <span>Mobile Banking (Soon)</span>
                             </div>
                         </label>
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="card">
-                            <div class="payment-box">
+                        <label class="payment-option text-muted" style="cursor:not-allowed;" title="Coming Soon">
+                            <input type="radio" name="payment_method" value="card" disabled>
+                            <div class="payment-box bg-light">
                                 <i class="fas fa-credit-card"></i>
-                                <span>Card Payment</span>
+                                <span>Card Payment (Soon)</span>
                             </div>
                         </label>
                     </div>
@@ -78,8 +78,16 @@
                 <div class="order-summary-card sticky-top">
                     <h4>Order Summary</h4>
                     {% for item in items %}
-                    <div class="checkout-item">
-                        <span class="checkout-item-name">{{ item.product.name }} <em>×{{ item.quantity }}</em></span>
+                    <div class="checkout-item align-items-start">
+                        <span class="checkout-item-name">
+                            {{ item.product.name }} <em>×{{ item.quantity }}</em>
+                            {% if item.color or item.size %}
+                            <small class="text-muted d-block mt-1">
+                                {% if item.color %}Color: {{ item.color }} {% endif %}
+                                {% if item.size %}Size: {{ item.size }}{% endif %}
+                            </small>
+                            {% endif %}
+                        </span>
                         <span>৳{{ item.subtotal }}</span>
                     </div>
                     {% endfor %}
