@@ -102,9 +102,12 @@
     </div>
 </div>
 
+<!-- ========== TOAST NOTIFICATIONS ========== -->
+<div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 2000;"></div>
+
 <!-- ========== MESSAGES ========== -->
 {% if messages %}
-<div class="container mt-3">
+<div class="container mt-3" id="django-messages">
     {% for msg in messages %}
     <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show" role="alert">
         {{ msg }}
@@ -188,6 +191,60 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const id = 'toast-' + Date.now();
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const color = type === 'success' ? 'var(--success)' : 'var(--danger)';
+        
+        const toastHtml = `
+            <div id="${id}" class="toast show animate__animated animate__fadeInUp" role="alert" aria-live="assertive" aria-atomic="true" style="background: #fff; border-left: 5px solid ${color}; min-width: 250px; border-radius: 8px; box-shadow: var(--shadow-hover);">
+                <div class="toast-body d-flex align-items-center gap-2 p-3">
+                    <i class="fas ${icon}" style="color: ${color}; font-size: 1.2rem;"></i>
+                    <div class="flex-grow-1 fw-medium" style="color: var(--text); font-size: 14px;">${message}</div>
+                    <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        
+        const toastElement = document.getElementById(id);
+        setTimeout(() => {
+            if (toastElement) {
+                toastElement.classList.replace('animate__fadeInUp', 'animate__fadeOutDown');
+                setTimeout(() => toastElement.remove(), 500);
+            }
+        }, 4000);
+    }
+
+    function updateCartBadge(count) {
+        let badge = document.querySelector('.cart-badge');
+        if (count > 0) {
+            if (!badge) {
+                const iconWrap = document.querySelector('.cart-icon-wrap');
+                badge = document.createElement('span');
+                badge.className = 'cart-badge';
+                iconWrap.appendChild(badge);
+            }
+            badge.innerText = count;
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+
+    // Auto-hide Django alerts
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('#django-messages .alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

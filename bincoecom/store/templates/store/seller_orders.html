@@ -1,0 +1,113 @@
+{% extends 'layout.html' %}
+{% block title %}Received Orders – Binco{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="seller-header">
+        <div>
+            <h2><i class="fas fa-shopping-bag me-2"></i>Received Orders</h2>
+            <p>View and track orders containing your products.</p>
+        </div>
+        <div class="seller-actions-top">
+            <a href="{% url 'seller_dashboard' %}" class="btn btn-seller-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if orders %}
+    <div class="seller-orders-list mt-4">
+        {% for order_data in orders %}
+        <div class="order-card mb-4 border rounded shadow-sm bg-white">
+            <div class="order-card-header p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+                <div>
+                    <span class="fw-bold text-primary">Order #{{ order_data.order.id }}</span>
+                    <span class="ms-3 text-muted small"><i class="far fa-calendar-alt me-1"></i> {{ order_data.order.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <div>
+                    <span class="badge {% if order_data.order.status == 'delivered' %}bg-success{% elif order_data.order.status == 'cancelled' %}bg-danger{% else %}bg-info text-dark{% endif %}">
+                        {{ order_data.order.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="p-3">
+                <div class="row">
+                    <div class="col-md-8 border-end">
+                        <h6 class="text-muted mb-3">Your Items in this Order:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Variation</th>
+                                        <th>Price</th>
+                                        <th>Qty</th>
+                                        <th class="text-end">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order_data.items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" alt="" class="me-2 rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                                {% endif %}
+                                                <span class="small">{{ item.product_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border small">
+                                                {{ item.color|default:"N/A" }} / {{ item.size|default:"N/A" }}
+                                            </span>
+                                        </td>
+                                        <td>৳{{ item.price }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td class="text-end fw-bold">৳{{ item.subtotal }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4" class="text-end text-muted small">Your Sales from this Order:</td>
+                                        <td class="text-end fw-bold text-success">৳{{ order_data.seller_total }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-4 ps-md-4">
+                        <h6 class="text-muted mb-3">Customer Information:</h6>
+                        <p class="mb-1"><strong>{{ order_data.order.full_name }}</strong></p>
+                        <p class="mb-1 small text-muted"><i class="fas fa-envelope me-1"></i> {{ order_data.order.email }}</p>
+                        <p class="mb-1 small text-muted"><i class="fas fa-phone me-1"></i> {{ order_data.order.phone }}</p>
+                        <div class="mt-3">
+                            <h6 class="text-muted small mb-1">Shipping Address:</h6>
+                            <p class="small text-muted mb-0">
+                                {{ order_data.order.address }}, {{ order_data.order.city }}, {{ order_data.order.postal_code }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state mt-5">
+        <i class="fas fa-shopping-cart"></i>
+        <h3>No orders received yet</h3>
+        <p>Once you receive orders for your products, they will appear here.</p>
+        <a href="{% url 'seller_dashboard' %}" class="btn-shop mt-3">Go to Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .order-card { transition: transform 0.2s; }
+    .order-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; }
+    .btn-seller-secondary { background: white; border: 1px solid #dee2e6; color: #495057; font-weight: 500; }
+    .btn-seller-secondary:hover { background: #f8f9fa; border-color: #ced4da; }
+</style>
+{% endblock %}

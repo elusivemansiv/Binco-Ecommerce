@@ -18,8 +18,20 @@
             <div class="summary-row"><span>Ship To</span><span>{{ order.city }}</span></div>
             <hr>
             {% for item in order.items.all %}
-            <div class="checkout-item">
-                <span>{{ item.product_name }} ×{{ item.quantity }}</span>
+            <div class="checkout-item d-flex align-items-center gap-3 py-2">
+                <div class="item-img" style="width: 50px; height: 50px; border-radius: 6px; overflow: hidden; background: #f8f9fa;">
+                    {% if item.selected_image %}
+                    <img src="{{ item.selected_image.url }}" alt="{{ item.product_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% elif item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    <span class="d-block">{{ item.product_name }} ×{{ item.quantity }}</span>
+                    {% if item.color or item.size %}<small class="text-muted">{{ item.color|default:'' }} {{ item.size|default:'' }}</small>{% endif %}
+                </div>
                 <span>৳{{ item.subtotal }}</span>
             </div>
             {% endfor %}

@@ -25,9 +25,27 @@
 
                 <h4 class="mt-4 mb-3">Items Ordered</h4>
                 {% for item in order.items.all %}
-                <div class="checkout-item">
-                    <span>{{ item.product_name }} <em>×{{ item.quantity }}</em></span>
-                    <span>৳{{ item.subtotal }}</span>
+                <div class="checkout-item d-flex align-items-center gap-3 py-2 border-bottom">
+                    <div class="item-img" style="width: 60px; height: 60px; border-radius: 8px; overflow: hidden; background: #f8f9fa;">
+                        {% if item.selected_image %}
+                        <img src="{{ item.selected_image.url }}" alt="{{ item.product_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% elif item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <div class="h-100 d-flex align-items-center justify-content-center text-muted"><i class="fas fa-image"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="item-info flex-grow-1">
+                        <h6 class="mb-0">{{ item.product_name }}</h6>
+                        <div class="text-muted small">
+                            {% if item.color %}Color: {{ item.color }}{% if item.size %}, {% endif %}{% endif %}
+                            {% if item.size %}Size: {{ item.size }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="item-price text-end">
+                        <div class="small text-muted">×{{ item.quantity }}</div>
+                        <div class="fw-bold">৳{{ item.subtotal }}</div>
+                    </div>
                 </div>
                 {% endfor %}
                 <hr>

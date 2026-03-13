@@ -5,21 +5,27 @@ from django.db.models import Q
 from django.utils import timezone
 from .models import (
     Product, Category, Cart, CartItem, Order, OrderItem,
-    Wishlist, Coupon, ProductReview, ProductImage
+    Wishlist, Coupon, ProductReview, ProductImage,
+    HomeSlider, PromotionCard, ProductVariation
 )
 
 
 # ─────────────────────────── HOME ────────────────────────────
 def home(request):
-    categories = Category.objects.all()
+    all_categories = Category.objects.all()
     featured = Product.objects.filter(is_featured=True, is_active=True)[:8]
     deals = Product.objects.filter(discount_price__isnull=False, is_active=True)[:8]
     trending = Product.objects.filter(is_active=True).order_by('-created_at')[:8]
+    sliders = HomeSlider.objects.filter(is_active=True)
+    promotions = PromotionCard.objects.filter(is_active=True)
+
     context = {
-        'categories': categories,
+        'all_categories': all_categories,
         'featured': featured,
         'deals': deals,
         'trending': trending,
+        'sliders': sliders,
+        'promotions': promotions,
     }
     return render(request, 'store/home.html', context)
 
@@ -125,6 +131,14 @@ def cart_view(request):
     if request.user.is_authenticated:
         cart, _ = Cart.objects.get_or_create(user=request.user)
         items = cart.items.select_related('product').all()
+        
+        # --- Related Products for Cart ---
+        cart_categories = items.values_list('product__category', flat=True).distinct()
+        related_products = Product.objects.filter(
+            category__in=cart_categories, 
+            is_active=True
+        ).exclude(id__in=items.values_list('product_id', flat=True))[:4]
+        
         coupon = request.session.get('coupon_code')
         discount_percent = 0
         discount_amount = 0
@@ -144,6 +158,7 @@ def cart_view(request):
         context = {
             'cart': cart,
             'items': items,
+            'related_products': related_products,
             'discount_percent': discount_percent,
             'discount_amount': discount_amount,
             'final_total': cart.total - discount_amount,
@@ -177,6 +192,8 @@ def add_to_cart(request, product_id):
         color_name = request.POST.get('color', '')
         size_name = request.POST.get('size', '')
 
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true'
+
     # --- Variation Stock Check ---
     from .models import ProductVariation
     variation = ProductVariation.objects.filter(
@@ -187,21 +204,41 @@ def add_to_cart(request, product_id):
 
     if variation:
         if variation.stock < 1:
-            messages.error(request, f'Sorry, this variant ({color_name} - {size_name}) is out of stock.')
+            msg = f'Sorry, this variant ({color_name} - {size_name}) is out of stock.'
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': msg})
+            messages.error(request, msg)
             return redirect('product_detail', product_id=product.id)
     elif product.variations.exists():
-        # If product has variations but none found/selected correctly
-        messages.error(request, 'Please select a valid color and size.')
+        msg = 'Please select a valid color and size.'
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': msg})
+        messages.error(request, msg)
         return redirect('product_detail', product_id=product.id)
     elif product.stock < 1:
-        messages.error(request, f'Sorry, "{product.name}" is out of stock.')
+        msg = f'Sorry, "{product.name}" is out of stock.'
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': msg})
+        messages.error(request, msg)
         return redirect('product_detail', product_id=product.id)
 
     item, created = CartItem.objects.get_or_create(cart=cart, product=product, color=color_name, size=size_name)
     if not created:
         item.quantity += 1
         item.save()
-    messages.success(request, f'"{product.name}" added to cart!')
+    
+    cart_count = cart.items.count()
+    success_msg = f'"{product.name}" added to cart!'
+    
+    if is_ajax:
+        from django.http import JsonResponse
+        return JsonResponse({
+            'status': 'success', 
+            'message': success_msg,
+            'cart_count': cart_count
+        })
+
+    messages.success(request, success_msg)
     return redirect('cart')
 
 
@@ -414,16 +451,54 @@ def add_to_wishlist(request, product_id):
     return redirect(request.META.get('HTTP_REFERER', 'wishlist'))
 
 
-# ─────────────────────────── SELLER DASHBOARD ────────────────
 @login_required(login_url='login')
 def seller_dashboard(request):
     if not request.user.profile.is_seller:
         messages.error(request, 'You need to be a seller to access this page.')
         return redirect('dashboard')
+    
     products = Product.objects.filter(seller=request.user)
+    
+    # Calculate Earnings (Delivered orders only)
+    delivered_items = OrderItem.objects.filter(
+        product__seller=request.user,
+        order__status='delivered'
+    )
+    total_earnings = sum(item.subtotal for item in delivered_items)
+    
+    # Orders count (all unique orders containing seller's items)
     orders_count = OrderItem.objects.filter(product__seller=request.user).values('order').distinct().count()
-    context = {'products': products, 'orders_count': orders_count}
+    
+    context = {
+        'products': products, 
+        'orders_count': orders_count,
+        'total_earnings': total_earnings
+    }
     return render(request, 'store/seller_dashboard.html', context)
+
+
+@login_required(login_url='login')
+def seller_orders(request):
+    if not request.user.profile.is_seller:
+        return redirect('dashboard')
+    
+    # Fetch orders that contain items belonging to this seller
+    seller_items = OrderItem.objects.filter(product__seller=request.user).select_related('order', 'product', 'order__user')
+    
+    # Group by order for the template
+    orders_dict = {}
+    for item in seller_items:
+        if item.order.id not in orders_dict:
+            orders_dict[item.order.id] = {
+                'order': item.order,
+                'items': [],
+                'seller_total': 0
+            }
+        orders_dict[item.order.id]['items'].append(item)
+        orders_dict[item.order.id]['seller_total'] += item.subtotal
+        
+    context = {'orders': orders_dict.values()}
+    return render(request, 'store/seller_orders.html', context)
 
 
 @login_required(login_url='login')

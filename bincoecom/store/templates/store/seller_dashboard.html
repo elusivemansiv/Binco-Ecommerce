@@ -8,9 +8,17 @@
             <h2><i class="fas fa-store me-2"></i>Seller Dashboard</h2>
             <p>Welcome, <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>!</p>
         </div>
-        <a href="{% url 'add_product' %}" class="btn-add-product">
-            <i class="fas fa-plus me-2"></i>List New Product
-        </a>
+        <div class="seller-actions-top d-flex flex-wrap gap-2">
+            <a href="{% url 'add_product' %}" class="btn-add-product">
+                <i class="fas fa-plus me-2"></i>List New Product
+            </a>
+            <a href="{% url 'seller_orders' %}" class="btn btn-seller-secondary">
+                <i class="fas fa-shopping-bag me-1"></i> Orders Received
+            </a>
+            <button class="btn btn-seller-secondary" disabled title="Coming Soon">
+                <i class="fas fa-cog me-1"></i> Settings
+            </button>
+        </div>
     </div>
 
     <!-- Stats -->
@@ -24,6 +32,16 @@
             <i class="fas fa-shopping-bag"></i>
             <span class="stat-num">{{ orders_count }}</span>
             <span>Orders Received</span>
+        </div>
+        <div class="stat-box">
+            <i class="fas fa-wallet"></i>
+            <span class="stat-num">৳{{ total_earnings|floatformat:2 }}</span>
+            <span>Total Earnings</span>
+        </div>
+        <div class="stat-box">
+            <i class="fas fa-star"></i>
+            <span class="stat-num">0.0</span>
+            <span>Seller Rating</span>
         </div>
     </div>
 
@@ -59,7 +77,26 @@
                         ৳{{ product.price }}
                         {% if product.discount_price %}<span class="text-danger ms-1">→ ৳{{ product.discount_price }}</span>{% endif %}
                     </td>
-                    <td>{{ product.stock }}</td>
+                    <td>
+                        {% if product.variations.exists %}
+                        <div class="variation-list small">
+                            {% for v in product.variations.all %}
+                            <div class="variation-item text-nowrap">
+                                <span class="badge bg-light text-dark border">
+                                    {{ v.color.name|default:'N/A' }} / {{ v.size.name|default:'N/A' }}
+                                </span>
+                                <span class="fw-bold {% if v.stock == 0 %}text-danger{% else %}text-success{% endif %}">
+                                    : {{ v.stock }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="{% if product.stock == 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                            {{ product.stock }}
+                        </span>
+                        {% endif %}
+                    </td>
                     <td>{% if product.is_featured %}<span class="badge bg-warning text-dark">Yes</span>{% else %}No{% endif %}</td>
                     <td class="action-btns">
                         <a href="{% url 'edit_product' product.id %}" class="btn-edit">

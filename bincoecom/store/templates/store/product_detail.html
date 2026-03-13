@@ -27,10 +27,13 @@
                 {% if extra_images %}
                 <div class="thumbnail-row">
                     {% if product.image %}
-                    <img src="{{ product.image.url }}" class="thumb active" onclick="setMain(this, '{{ product.image.url }}')">
+                    <img src="{{ product.image.url }}" class="thumb active" data-color=""
+                        onclick="setMain(this, '{{ product.image.url }}')">
                     {% endif %}
                     {% for img in extra_images %}
-                    <img src="{{ img.image.url }}" class="thumb" onclick="setMain(this, '{{ img.image.url }}')">
+                    <img src="{{ img.image.url }}" class="thumb" 
+                        data-color="{{ img.color.name|default:'' }}"
+                        onclick="setMain(this, '{{ img.image.url }}')">
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -41,7 +44,8 @@
         <div class="col-lg-7">
             <div class="product-detail-info">
                 {% if product.category %}
-                <a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="product-cat mb-2 d-inline-block">
+                <a href="{% url 'product_list' %}?category={{ product.category.slug }}"
+                    class="product-cat mb-2 d-inline-block">
                     {{ product.category.name }}
                 </a>
                 {% endif %}
@@ -54,10 +58,10 @@
                         {% with rating=product.average_rating %}
                         {% for i in "12345" %}
                         {% if forloop.counter <= rating %}<i class="fas fa-star"></i>
-                        {% else %}<i class="far fa-star"></i>{% endif %}
-                        {% endfor %}
-                        <span class="rating-num">{{ rating }}</span>
-                        {% endwith %}
+                            {% else %}<i class="far fa-star"></i>{% endif %}
+                            {% endfor %}
+                            <span class="rating-num">{{ rating }}</span>
+                            {% endwith %}
                     </div>
                     <span class="review-count">{{ product.reviews.count }} reviews</span>
                     <span class="dot">•</span>
@@ -102,14 +106,16 @@
                         <div class="d-flex gap-2">
                             {% for color in product.colors.all %}
                             <div class="form-check form-check-inline m-0">
-                                <input class="form-check-input variation-selector" type="radio" name="color" id="color_{{ color.id }}" value="{{ color.name }}">
+                                <input class="form-check-input variation-selector" type="radio" name="color"
+                                    id="color_{{ color.id }}" value="{{ color.name }}">
                                 <label class="form-check-label" for="color_{{ color.id }}">
                                     {{ color.name }}
                                 </label>
                             </div>
                             {% endfor %}
                             <div class="form-check form-check-inline m-0">
-                                <input class="form-check-input variation-selector" type="radio" name="color" id="color_none" value="">
+                                <input class="form-check-input variation-selector" type="radio" name="color"
+                                    id="color_none" value="">
                                 <label class="form-check-label" for="color_none">None</label>
                             </div>
                         </div>
@@ -170,9 +176,9 @@
                             {% with rating=product.average_rating %}
                             {% for i in "12345" %}
                             {% if forloop.counter <= rating %}<i class="fas fa-star"></i>
-                            {% else %}<i class="far fa-star"></i>{% endif %}
-                            {% endfor %}
-                            {% endwith %}
+                                {% else %}<i class="far fa-star"></i>{% endif %}
+                                {% endfor %}
+                                {% endwith %}
                         </div>
                         <span>Based on {{ product.reviews.count }} reviews</span>
                     </div>
@@ -187,8 +193,8 @@
                             <div class="review-stars">
                                 {% for i in "12345" %}
                                 {% if forloop.counter <= review.rating %}<i class="fas fa-star"></i>
-                                {% else %}<i class="far fa-star"></i>{% endif %}
-                                {% endfor %}
+                                    {% else %}<i class="far fa-star"></i>{% endif %}
+                                    {% endfor %}
                             </div>
                         </div>
                         <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
@@ -212,7 +218,8 @@
                             <label for="star{{ i }}"><i class="fas fa-star"></i></label>
                             {% endfor %}
                         </div>
-                        <textarea name="comment" rows="4" class="review-textarea" placeholder="Share your experience with this product..."></textarea>
+                        <textarea name="comment" rows="4" class="review-textarea"
+                            placeholder="Share your experience with this product..."></textarea>
                         <button type="submit" class="btn-submit-review">Submit Review</button>
                     </form>
                 </div>
@@ -244,7 +251,8 @@
                         <span class="price-current">৳{{ p.price }}</span>
                         {% endif %}
                     </div>
-                    <a href="{% url 'add_to_cart' p.id %}" class="btn-add-cart"><i class="fas fa-cart-plus"></i> Add to Cart</a>
+                    <a href="{% url 'add_to_cart' p.id %}" class="btn-add-cart"><i class="fas fa-cart-plus"></i> Add to
+                        Cart</a>
                 </div>
             </div>
             {% endfor %}
@@ -252,17 +260,63 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-function setMain(el, src) {
-    document.getElementById('mainImg').src = src;
-    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-}
+    function setMain(el, src) {
+        document.getElementById('mainImg').src = src;
+        document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+    }
 
-document.addEventListener('DOMContentLoaded', function () {
-    const variations = [
-        {% for v in variations %}
+    document.addEventListener('DOMContentLoaded', function () {
+        // AJAX Add to Cart
+        const cartForm = document.querySelector('form[action*="add_to_cart"]');
+        if (cartForm) {
+            cartForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                formData.append('ajax', 'true');
+                const btn = document.getElementById('add-to-cart-btn');
+                
+                if (!btn) return;
+                
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showToast(data.message);
+                        updateCartBadge(data.cart_count);
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Something went wrong. Please try again.', 'error');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            });
+        }
+
+        // Gallery Filtering Logic
+        const variations = [
+            {% for v in variations %}
         {
             "color": "{{ v.color.name|default:'' }}",
             "size": "{{ v.size.name|default:'' }}",
@@ -285,10 +339,25 @@ document.addEventListener('DOMContentLoaded', function () {
         const sizeSelect = document.querySelector('select[name="size"]');
         if (sizeSelect) selectedSize = sizeSelect.value;
 
+        // Filter thumbnails
+        const thumbs = document.querySelectorAll('.thumb');
+        let firstMatch = null;
+        thumbs.forEach(t => {
+            const thumbColor = t.getAttribute('data-color');
+            if (!selectedColor || !thumbColor || thumbColor === selectedColor) {
+                t.style.display = 'block';
+                if (!firstMatch && thumbColor === selectedColor) firstMatch = t;
+            } else {
+                t.style.display = 'none';
+            }
+        });
+
+        // Switch main image if a match is found
+        if (firstMatch) {
+            setMain(firstMatch, firstMatch.src);
+        }
+
         // In independent pool model, we look for an EXACT match of what is selected.
-        // If they select only Size, we look for Color="" and Size="M".
-        // If they select both, we look for Color="Red" and Size="M".
-        
         if (!selectedColor && !selectedSize) {
             stockDisplay.style.display = 'none';
             return;

@@ -2,8 +2,20 @@ from django.contrib import admin
 from .models import (
     Category, Product, ProductImage, ProductReview,
     Cart, CartItem, Coupon, Order, OrderItem, Wishlist,
-    Color, Size, ProductVariation
+    Color, Size, ProductVariation, HomeSlider, PromotionCard
 )
+
+
+@admin.register(HomeSlider)
+class HomeSliderAdmin(admin.ModelAdmin):
+    list_display = ('title', 'order', 'is_active', 'created_at')
+    list_editable = ('order', 'is_active')
+
+
+@admin.register(PromotionCard)
+class PromotionCardAdmin(admin.ModelAdmin):
+    list_display = ('title', 'order', 'is_active', 'created_at')
+    list_editable = ('order', 'is_active')
 
 
 @admin.register(Category)
@@ -39,6 +51,7 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline, ProductVariationInline]
+    readonly_fields = ('stock', 'total_stock')
     list_editable = ('is_featured', 'is_active')
     filter_horizontal = ('colors', 'sizes')
 

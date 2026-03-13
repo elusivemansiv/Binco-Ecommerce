@@ -3,6 +3,46 @@
 
 {% block content %}
 <!-- ========== HERO ========== -->
+<!-- ========== DYNAMIC SLIDER ========== -->
+{% if sliders %}
+<section class="hero-slider-wrap">
+    <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            {% for slider in sliders %}
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
+            {% endfor %}
+        </div>
+        <div class="carousel-inner">
+            {% for slider in sliders %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}" data-bs-interval="5000">
+                <div class="slider-img"
+                    style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{{ slider.image.url }}'); background-size: cover; background-position: center;">
+                </div>
+                <div class="container h-100">
+                    <div class="carousel-caption text-start">
+                        <h1>{{ slider.title }}</h1>
+                        <p class="lead">{{ slider.subtitle }}</p>
+                        <div class="hero-actions mt-4">
+                            <a href="{{ slider.link_url }}" class="btn-shop">Shop Now <i
+                                    class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+</section>
+{% else %}
+<!-- Fallback Hero if no sliders exist -->
 <section class="hero-section">
     <div class="container">
         <div class="hero-content">
@@ -20,22 +60,40 @@
                 </div>
             </div>
             <div class="hero-stats">
-                <div class="stat-card">
-                    <span class="stat-num">50K+</span>
-                    <span class="stat-label">Products</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-num">10K+</span>
-                    <span class="stat-label">Sellers</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-num">100K+</span>
-                    <span class="stat-label">Buyers</span>
-                </div>
+                <div class="stat-card"><span class="stat-num">50K+</span><span class="stat-label">Products</span></div>
+                <div class="stat-card"><span class="stat-num">10K+</span><span class="stat-label">Sellers</span></div>
+                <div class="stat-card"><span class="stat-num">100K+</span><span class="stat-label">Buyers</span></div>
             </div>
         </div>
     </div>
 </section>
+{% endif %}
+
+<!-- ========== PROMOTION CARDS ========== -->
+{% if promotions %}
+<section class="section-block pt-4 pb-0">
+    <div class="container">
+        <div class="row g-4">
+            {% for promo in promotions %}
+            <div class="col-md-{% if promotions.count == 1 %}12{% elif promotions.count == 2 %}6{% else %}4{% endif %}">
+                <a href="{{ promo.link_url }}" class="promo-card">
+                    <div class="promo-img-wrap">
+                        <img src="{{ promo.image.url }}" alt="{{ promo.title }}">
+                        {% if promo.badge_text %}
+                        <span class="promo-badge">{{ promo.badge_text }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="promo-content">
+                        <h3>{{ promo.title }}</h3>
+                        <p>{{ promo.subtitle }}</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <!-- ========== CATEGORIES ========== -->
 {% if all_categories %}

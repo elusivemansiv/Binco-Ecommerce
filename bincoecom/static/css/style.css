@@ -199,8 +199,83 @@ input, textarea, select { font-family: inherit; }
     border-radius: 20px;
     font-size: 13px;
     font-weight: 600;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     border: 1px solid rgba(245,166,35,0.3);
+}
+
+/* ─── CUSTOM SLIDER (Home Page) ─── */
+.hero-slider-wrap {
+    height: 500px;
+    background: #000;
+}
+#heroCarousel, .carousel-inner, .carousel-item, .slider-img {
+    height: 100%;
+}
+.slider-img {
+    transition: transform 10s ease;
+}
+.carousel-item.active .slider-img {
+    transform: scale(1.1);
+}
+.carousel-caption {
+    bottom: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 0;
+    z-index: 10;
+}
+.carousel-caption h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* ─── PROMO CARDS ─── */
+.promo-card {
+    display: block;
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    height: 220px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+.promo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+.promo-img-wrap {
+    height: 100%;
+}
+.promo-img-wrap img {
+    height: 100%;
+}
+.promo-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 24px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: #fff;
+}
+.promo-content h3 { font-size: 20px; font-weight: 700; margin-bottom: 5px; }
+.promo-content p { font-size: 14px; margin: 0; opacity: 0.9; }
+.promo-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: var(--accent);
+    color: #000;
+    padding: 4px 12px;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    border-radius: 4px;
 }
 .hero-text h1 { font-size: 46px; font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
 .hero-text .highlight { color: var(--accent); }
@@ -381,7 +456,9 @@ input, textarea, select { font-family: inherit; }
 
 /* ─── DEALS SECTION ─── */
 .deals-section { background: linear-gradient(135deg, #1a1a2e 0%, #0d1117 100%); }
-.deals-section .section-header h2 { color: #fff; }
+.deals-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.deals-header h2 { color: #fff; font-size: 24px; font-weight: 700; }
+.deals-header p { color: rgba(255,255,255,0.7); font-size: 14px; }
 .deals-section .product-card { background: #1e2744; border-color: #2d3748; }
 .deals-section .product-name a { color: #e2e8f0; }
 .deals-section .product-name a:hover { color: var(--accent); }
@@ -583,6 +660,9 @@ input, textarea, select { font-family: inherit; }
 .btn-edit:hover { background: var(--primary); color: #fff; }
 .btn-del { background: #fee2e2; color: #991b1b; padding: 6px 10px; border-radius: 6px; font-size: 13px; transition: var(--transition); }
 .btn-del:hover { background: var(--danger); color: #fff; }
+.btn-seller-secondary { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-dark); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13.5px; transition: var(--transition); }
+.btn-seller-secondary:hover:not(:disabled) { background: var(--primary); color: #fff; }
+.btn-seller-secondary:disabled { opacity: 0.6; cursor: not-allowed; border-color: var(--border); color: var(--text-muted); }
 
 /* ─── AUTH PAGES ─── */
 .auth-page { min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; padding: 40px 16px; background: linear-gradient(135deg, #e8f0fe 0%, #f0f4ff 100%); }
@@ -649,6 +729,20 @@ input, textarea, select { font-family: inherit; }
 .form-control, .form-select { border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s; background: #fff; }
 .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,100,210,0.08); }
 .form-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); display: block; }
+
+/* ─── DASHBOARD VARIATIONS ─── */
+.variation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.variation-item .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+}
+.variation-item {
+    font-family: inherit;
+}
 
 /* ─── ALERTS ─── */
 .alert-success { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }

@@ -13,7 +13,9 @@
                 {% for item in items %}
                 <div class="cart-row">
                     <div class="cart-img">
-                        {% if item.product.image %}
+                        {% if item.selected_image %}
+                        <img src="{{ item.selected_image.url }}" alt="{{ item.product.name }}">
+                        {% elif item.product.image %}
                         <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
                         {% else %}
                         <div class="no-image small"><i class="fas fa-image"></i></div>
@@ -119,12 +121,37 @@
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="empty-state">
-        <i class="fas fa-shopping-cart"></i>
-        <h3>Your cart is empty</h3>
-        <p>Looks like you haven't added anything yet.</p>
-        <a href="{% url 'product_list' %}" class="btn-shop mt-3">Start Shopping</a>
+    {% endif %}
+
+    <!-- Related Products section in Cart -->
+    {% if related_products %}
+    <div class="related-section mt-5 pt-4 border-top">
+        <h3 class="section-title mb-4"><i class="fas fa-lightbulb me-2" style="color: var(--accent);"></i>You Might Also Like</h3>
+        <div class="products-grid">
+            {% for p in related_products %}
+            <div class="product-card">
+                <a href="{% url 'product_detail' p.id %}" class="product-img-wrap">
+                    {% if p.image %}
+                    <img src="{{ p.image.url }}" alt="{{ p.name }}">
+                    {% else %}
+                    <div class="no-image small"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                </a>
+                <div class="product-info">
+                    <span class="product-cat">{{ p.category.name }}</span>
+                    <h3 class="product-name"><a href="{% url 'product_detail' p.id %}">{{ p.name }}</a></h3>
+                    <div class="product-price">
+                        <span class="price-current">৳{{ p.effective_price }}</span>
+                    </div>
+                    <div class="mt-2">
+                        <a href="{% url 'product_detail' p.id %}" class="btn-add-cart w-100">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     {% endif %}
 </div>

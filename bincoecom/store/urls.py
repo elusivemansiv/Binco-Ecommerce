@@ -28,6 +28,7 @@ urlpatterns = [
 
     # Seller
     path('seller/', views.seller_dashboard, name='seller_dashboard'),
+    path('seller/orders/', views.seller_orders, name='seller_orders'),
     path('seller/product/add/', views.add_product, name='add_product'),
     path('seller/product/<int:product_id>/edit/', views.edit_product, name='edit_product'),
     path('seller/product/<int:product_id>/delete/', views.delete_product, name='delete_product'),

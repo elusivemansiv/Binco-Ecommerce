@@ -85,10 +85,15 @@ class Product(models.Model):
     def total_stock(self):
         variations = self.variations.all()
         if variations.exists():
-            if any(v.stock == 0 for v in variations):
-                return 0
             return sum(v.stock for v in variations)
         return self.stock
+
+    def get_image_for_color(self, color_name):
+        if color_name:
+            color_img = self.extra_images.filter(color__name=color_name).first()
+            if color_img:
+                return color_img.image
+        return self.image
 
     def __str__(self):
         return self.name
@@ -103,6 +108,13 @@ class ProductVariation(models.Model):
     class Meta:
         unique_together = ('product', 'color', 'size')
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Sync parent product stock
+        product = self.product
+        total = sum(v.stock for v in product.variations.all())
+        Product.objects.filter(id=product.id).update(stock=total)
+
     def __str__(self):
         color_name = self.color.name if self.color else "N/A"
         size_name = self.size.name if self.size else "N/A"
@@ -112,9 +124,10 @@ class ProductVariation(models.Model):
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='extra_images')
     image = models.ImageField(upload_to='products/gallery/')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, related_name='images')
 
     def __str__(self):
-        return f"Image for {self.product.name}"
+        return f"Image for {self.product.name} ({self.color.name if self.color else 'No Color'})"
 
 
 class ProductReview(models.Model):
@@ -154,6 +167,10 @@ class CartItem(models.Model):
     @property
     def subtotal(self):
         return self.product.effective_price * self.quantity
+
+    @property
+    def selected_image(self):
+        return self.product.get_image_for_color(self.color)
 
     def __str__(self):
         return f"{self.quantity}× {self.product.name}"
@@ -267,6 +284,12 @@ class OrderItem(models.Model):
     def subtotal(self):
         return self.price * self.quantity
 
+    @property
+    def selected_image(self):
+        if self.product:
+            return self.product.get_image_for_color(self.color)
+        return None
+
     def __str__(self):
         return f"{self.quantity}× {self.product_name}"
 
@@ -277,3 +300,36 @@ class Wishlist(models.Model):
 
     def __str__(self):
         return f"Wishlist of {self.user.username}"
+
+
+class HomeSlider(models.Model):
+    title = models.CharField(max_length=200)
+    subtitle = models.CharField(max_length=500, blank=True)
+    image = models.ImageField(upload_to='sliders/')
+    link_url = models.CharField(max_length=500, default='/')
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class PromotionCard(models.Model):
+    title = models.CharField(max_length=200)
+    subtitle = models.CharField(max_length=500, blank=True)
+    image = models.ImageField(upload_to='promotions/')
+    link_url = models.CharField(max_length=500, default='/')
+    badge_text = models.CharField(max_length=50, blank=True, help_text="e.g. NEW, -20%, HOT")
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return self.title

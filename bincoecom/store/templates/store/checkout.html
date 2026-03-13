@@ -78,17 +78,28 @@
                 <div class="order-summary-card sticky-top">
                     <h4>Order Summary</h4>
                     {% for item in items %}
-                    <div class="checkout-item align-items-start">
-                        <span class="checkout-item-name">
-                            {{ item.product.name }} <em>×{{ item.quantity }}</em>
-                            {% if item.color or item.size %}
-                            <small class="text-muted d-block mt-1">
-                                {% if item.color %}Color: {{ item.color }} {% endif %}
-                                {% if item.size %}Size: {{ item.size }}{% endif %}
-                            </small>
+                    <div class="checkout-item align-items-center">
+                        <div class="checkout-item-img me-3">
+                            {% if item.selected_image %}
+                            <img src="{{ item.selected_image.url }}" alt="{{ item.product.name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                            {% elif item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                            {% else %}
+                            <div class="no-image tiny" style="width: 50px; height: 50px; background: #eee; display: flex; align-items: center; justify-content: center; border-radius: 4px;"><i class="fas fa-image" style="color: #999;"></i></div>
                             {% endif %}
-                        </span>
-                        <span>৳{{ item.subtotal }}</span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <span class="checkout-item-name">
+                                {{ item.product.name }} <em>×{{ item.quantity }}</em>
+                                {% if item.color or item.size %}
+                                <small class="text-muted d-block mt-1">
+                                    {% if item.color %}Color: {{ item.color }} {% endif %}
+                                    {% if item.size %}Size: {{ item.size }}{% endif %}
+                                </small>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <span class="ms-auto">৳{{ item.subtotal }}</span>
                     </div>
                     {% endfor %}
                     <hr>
