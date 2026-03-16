@@ -20,6 +20,8 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
+    path('jet/', include('jet.urls', 'jet')),                        # Jet URLS
+    path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),  # Dashboard
     path('admin/', admin.site.urls),
     path('', include('store.urls')),
     path('accounts/', include('accounts.urls')),

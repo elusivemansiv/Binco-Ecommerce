@@ -17,6 +17,8 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
 
 INSTALLED_APPS = [
+    'jet.dashboard',
+    'jet',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -86,7 +88,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -96,3 +98,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'home'
+
+# ---------------------------------
+# Django Jet Reboot Configuration
+# ---------------------------------
+JET_DEFAULT_THEME = 'default'
+JET_SIDE_MENU_COMPACT = False
+JET_CHANGE_FORM_SIBLING_LINKS = True
+
+JET_SIDE_MENU_ITEMS = [
+    {'label': 'Store', 'items': [
+        {'name': 'store.product', 'label': 'Products'},
+        {'name': 'store.category', 'label': 'Categories'},
+        {'name': 'store.order', 'label': 'Orders'},
+        {'name': 'store.orderitem', 'label': 'Order Items'},
+    ]},
+    {'label': 'Accounts', 'items': [
+        {'name': 'auth.user', 'label': 'Users'},
+        {'name': 'auth.group', 'label': 'Groups'},
+    ]},
+]
