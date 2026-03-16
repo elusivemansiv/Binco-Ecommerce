@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (
     Category, Product, ProductImage, ProductReview,
     Cart, CartItem, Coupon, Order, OrderItem, Wishlist,
-    Color, Size, ProductVariation, HomeSlider, PromotionCard
+    Color, Size, ProductVariation, HomeSlider, PromotionCard,
+    ShippingConfig
 )
 
 
@@ -98,3 +99,16 @@ class OrderAdmin(admin.ModelAdmin):
 class WishlistAdmin(admin.ModelAdmin):
     list_display = ('user',)
     filter_horizontal = ('products',)
+
+
+@admin.register(ShippingConfig)
+class ShippingConfigAdmin(admin.ModelAdmin):
+    list_display = ('shipping_charge', 'free_shipping_threshold', 'is_active', 'updated_at')
+    
+    def has_add_permission(self, request):
+        # Prevent adding more than one config
+        return not ShippingConfig.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deleting the config
+        return False

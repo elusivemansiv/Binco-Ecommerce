@@ -1,6 +1,22 @@
 {% extends 'layout.html' %}
 {% block title %}Seller Dashboard – Binco{% endblock %}
 
+{% block extra_head %}
+<style>
+    .stat-box.clickable { cursor: pointer; transition: var(--transition); text-decoration: none; display: flex; flex-direction: column; align-items: center; border-radius: var(--radius-lg); overflow: hidden; }
+    .stat-box.clickable:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: var(--shadow-hover); background: var(--primary-light); }
+    .stat-box i { font-size: 24px; margin-bottom: 12px; transition: transform 0.3s ease; }
+    .stat-box.clickable:hover i { transform: scale(1.1); }
+    .analytics-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 25px; margin-top: 30px; box-shadow: var(--shadow); }
+    .analytics-card h4 { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text); border-bottom: 2px solid var(--bg); padding-bottom: 12px; }
+    
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
+    .icon-wrap { width: 50px; height: 50px; background: var(--primary-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .stat-box .stat-num { font-size: 24px; font-weight: 800; color: var(--text); }
+    .stat-box span:last-child { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4 mb-5">
     <div class="seller-header">
@@ -12,108 +28,80 @@
             <a href="{% url 'add_product' %}" class="btn-add-product">
                 <i class="fas fa-plus me-2"></i>List New Product
             </a>
-            <a href="{% url 'seller_orders' %}" class="btn btn-seller-secondary">
-                <i class="fas fa-shopping-bag me-1"></i> Orders Received
+            <a href="{% url 'seller_products' %}" class="btn btn-seller-secondary">
+                <i class="fas fa-box me-1"></i> My Products
             </a>
-            <button class="btn btn-seller-secondary" disabled title="Coming Soon">
-                <i class="fas fa-cog me-1"></i> Settings
-            </button>
+            <a href="{% url 'seller_orders' %}" class="btn btn-seller-secondary">
+                <i class="fas fa-shopping-bag me-1"></i> Received Orders
+            </a>
         </div>
     </div>
 
-    <!-- Stats -->
-    <div class="seller-stats">
-        <div class="stat-box">
-            <i class="fas fa-box"></i>
-            <span class="stat-num">{{ products.count }}</span>
-            <span>Products Listed</span>
-        </div>
-        <div class="stat-box">
-            <i class="fas fa-shopping-bag"></i>
-            <span class="stat-num">{{ orders_count }}</span>
-            <span>Orders Received</span>
-        </div>
-        <div class="stat-box">
-            <i class="fas fa-wallet"></i>
+    <!-- Main Metrics Row -->
+    <div class="metric-grid">
+        <a href="{% url 'seller_orders' %}?status=active" class="stat-box clickable p-4">
+            <div class="icon-wrap"><i class="fas fa-shopping-bag text-primary"></i></div>
+            <span class="stat-num">{{ active_orders }}</span>
+            <span>Active Orders</span>
+        </a>
+        <a href="{% url 'seller_orders' %}?status=success" class="stat-box clickable p-4">
+            <div class="icon-wrap" style="background: rgba(56, 161, 105, 0.1);"><i class="fas fa-check-circle text-success"></i></div>
+            <span class="stat-num">{{ success_orders }}</span>
+            <span>Successful</span>
+        </a>
+        <a href="{% url 'seller_orders' %}?status=cancelled" class="stat-box clickable p-4">
+            <div class="icon-wrap" style="background: rgba(229, 62, 62, 0.1);"><i class="fas fa-times-circle text-danger"></i></div>
+            <span class="stat-num">{{ cancelled_orders }}</span>
+            <span>Cancelled</span>
+        </a>
+        <a href="{% url 'seller_orders' %}?status=returned" class="stat-box clickable p-4">
+            <div class="icon-wrap" style="background: rgba(245, 166, 35, 0.1);"><i class="fas fa-undo text-warning"></i></div>
+            <span class="stat-num">{{ returned_orders }}</span>
+            <span>Returned</span>
+        </a>
+    </div>
+
+    <!-- Summary Metrics Row -->
+    <div class="metric-grid">
+        <div class="stat-box p-4">
+            <div class="icon-wrap" style="background: var(--primary-light);"><i class="fas fa-wallet text-primary"></i></div>
             <span class="stat-num">৳{{ total_earnings|floatformat:2 }}</span>
             <span>Total Earnings</span>
         </div>
-        <div class="stat-box">
-            <i class="fas fa-star"></i>
+        <div class="stat-box p-4">
+            <div class="icon-wrap" style="background: var(--bg);"><i class="fas fa-box text-muted"></i></div>
+            <span class="stat-num">{{ products_count }}</span>
+            <span>Products Listed</span>
+        </div>
+        <div class="stat-box p-4">
+            <div class="icon-wrap" style="background: rgba(245, 166, 35, 0.1);"><i class="fas fa-star text-warning"></i></div>
             <span class="stat-num">0.0</span>
             <span>Seller Rating</span>
         </div>
+        <div class="stat-box p-4">
+            <div class="icon-wrap" style="background: var(--primary-light);"><i class="fas fa-list-ol text-primary"></i></div>
+            <span class="stat-num">{{ orders_count }}</span>
+            <span>Total Orders</span>
+        </div>
     </div>
 
-    <!-- Products Table -->
-    <h4 class="mt-4 mb-3">My Products</h4>
-    {% if products %}
-    <div class="orders-table-wrap">
-        <table class="orders-table">
-            <thead>
-                <tr>
-                    <th>Image</th>
-                    <th>Product</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th>Featured</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                <tr>
-                    <td>
-                        {% if product.image %}
-                        <img src="{{ product.image.url }}" class="seller-thumb" alt="">
-                        {% else %}
-                        <div class="no-image tiny"><i class="fas fa-image"></i></div>
-                        {% endif %}
-                    </td>
-                    <td><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></td>
-                    <td>{{ product.category.name|default:'–' }}</td>
-                    <td>
-                        ৳{{ product.price }}
-                        {% if product.discount_price %}<span class="text-danger ms-1">→ ৳{{ product.discount_price }}</span>{% endif %}
-                    </td>
-                    <td>
-                        {% if product.variations.exists %}
-                        <div class="variation-list small">
-                            {% for v in product.variations.all %}
-                            <div class="variation-item text-nowrap">
-                                <span class="badge bg-light text-dark border">
-                                    {{ v.color.name|default:'N/A' }} / {{ v.size.name|default:'N/A' }}
-                                </span>
-                                <span class="fw-bold {% if v.stock == 0 %}text-danger{% else %}text-success{% endif %}">
-                                    : {{ v.stock }}
-                                </span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <span class="{% if product.stock == 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
-                            {{ product.stock }}
-                        </span>
-                        {% endif %}
-                    </td>
-                    <td>{% if product.is_featured %}<span class="badge bg-warning text-dark">Yes</span>{% else %}No{% endif %}</td>
-                    <td class="action-btns">
-                        <a href="{% url 'edit_product' product.id %}" class="btn-edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="{% url 'delete_product' product.id %}" class="btn-del"
-                           onclick="return confirm('Delete this product?')">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Analytics Graph -->
+    <div class="analytics-card">
+        <h4><i class="fas fa-chart-line me-2"></i>Performance (Last 30 Days)</h4>
+        <div style="height: 350px; position: relative;">
+            <canvas id="sellerAnalyticsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Quick Access -->
+    {% if products_count > 0 %}
+    <div class="mt-5 text-center">
+        <a href="{% url 'seller_products' %}" class="btn-checkout d-inline-block" style="width: auto; padding: 12px 30px;">
+            <i class="fas fa-box me-2"></i> Manage My Products
+        </a>
     </div>
     {% else %}
-    <div class="empty-state">
+    <div class="empty-state mt-5">
         <i class="fas fa-box-open"></i>
         <h3>No products listed yet</h3>
         <p>Start selling by listing your first product!</p>
@@ -121,4 +109,73 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('sellerAnalyticsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ labels|safe }},
+                datasets: [
+                    {
+                        label: 'Earnings (৳)',
+                        data: {{ earnings_series|safe }},
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Orders',
+                        data: {{ orders_series|safe }},
+                        borderColor: '#198754',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointStyle: 'circle',
+                        pointRadius: 4,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Earnings (৳)', font: { weight: 'bold' } },
+                        beginAtZero: true
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Orders', font: { weight: 'bold' } },
+                        ticks: { stepSize: 1 },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

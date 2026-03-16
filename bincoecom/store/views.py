@@ -1,12 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q
 from django.utils import timezone
+from django.db.models import Q, Sum, Count, F
+from datetime import timedelta
 from .models import (
     Product, Category, Cart, CartItem, Order, OrderItem,
     Wishlist, Coupon, ProductReview, ProductImage,
-    HomeSlider, PromotionCard, ProductVariation
+    HomeSlider, PromotionCard, ProductVariation, Color, Size, ShippingConfig
 )
 
 
@@ -155,13 +157,17 @@ def cart_view(request):
             except Coupon.DoesNotExist:
                 request.session.pop('coupon_code', None)
 
+        shipping_conf = ShippingConfig.get_config()
+        shipping_charge = shipping_conf.shipping_charge if cart.total < shipping_conf.free_shipping_threshold else 0
+
         context = {
             'cart': cart,
             'items': items,
             'related_products': related_products,
             'discount_percent': discount_percent,
             'discount_amount': discount_amount,
-            'final_total': cart.total - discount_amount,
+            'shipping_charge': shipping_charge,
+            'final_total': cart.total - discount_amount + shipping_charge,
             'coupon_code': coupon,
         }
         return render(request, 'store/cart.html', context)
@@ -324,6 +330,10 @@ def checkout(request):
         except Coupon.DoesNotExist:
             pass
 
+    shipping_conf = ShippingConfig.get_config()
+    shipping_charge = shipping_conf.shipping_charge if cart.total < shipping_conf.free_shipping_threshold else 0
+    final_total = cart.total - discount_amount + shipping_charge
+
     if request.method == 'POST':
         # --- Stock validation ---
         from .models import ProductVariation
@@ -408,7 +418,8 @@ def checkout(request):
         'items': items,
         'total': cart.total,
         'discount_amount': discount_amount,
-        'final_total': cart.total - discount_amount,
+        'shipping_charge': shipping_charge,
+        'final_total': final_total,
         'profile': profile,
     }
     return render(request, 'store/checkout.html', context)
@@ -429,6 +440,30 @@ def order_history(request):
 def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     return render(request, 'store/order_detail.html', {'order': order})
+
+
+@login_required(login_url='login')
+def request_return(request, order_id):
+    if request.method == 'POST':
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+        
+        if order.status not in ['shipped', 'delivered']:
+            messages.error(request, "Only shipped or delivered orders can be returned.")
+            return redirect('order_detail', order_id=order.id)
+            
+        reason = request.POST.get('reason', '').strip()
+        if not reason:
+            messages.error(request, "Please provide a reason for the return.")
+            return redirect('order_detail', order_id=order.id)
+            
+        order.status = 'return_requested'
+        order.return_reason = reason
+        order.save()
+        
+        messages.success(request, "Return request submitted successfully. The seller will review it soon.")
+        return redirect('order_detail', order_id=order.id)
+    
+    return redirect('order_history')
 
 
 # ─────────────────────────── WISHLIST ────────────────────────
@@ -459,22 +494,64 @@ def seller_dashboard(request):
     
     products = Product.objects.filter(seller=request.user)
     
-    # Calculate Earnings (Delivered orders only)
-    delivered_items = OrderItem.objects.filter(
-        product__seller=request.user,
-        order__status='delivered'
-    )
-    total_earnings = sum(item.subtotal for item in delivered_items)
+    # Base query for orders containing seller's items
+    seller_items = OrderItem.objects.filter(product__seller=request.user)
     
-    # Orders count (all unique orders containing seller's items)
-    orders_count = OrderItem.objects.filter(product__seller=request.user).values('order').distinct().count()
+    # Status-specific metrics (Unique orders)
+    active_orders = seller_items.exclude(order__status__in=['delivered', 'cancelled', 'returned']).values('order').distinct().count()
+    success_orders = seller_items.filter(order__status='delivered').values('order').distinct().count()
+    cancelled_orders = seller_items.filter(order__status='cancelled').values('order').distinct().count()
+    returned_orders = seller_items.filter(order__status='returned').values('order').distinct().count()
     
+    # Total Earnings (Delivered orders only)
+    total_earnings = seller_items.filter(order__status='delivered').aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+    
+    # Graph Data (Last 30 days)
+    labels = []
+    earnings_series = []
+    orders_series = []
+    
+    today = timezone.now().date()
+    for i in range(29, -1, -1):
+        day = today - timedelta(days=i)
+        labels.append(day.strftime('%b %d'))
+        
+        # Daily earnings
+        daily_earnings = seller_items.filter(
+            order__status='delivered', 
+            order__created_at__date=day
+        ).aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+        earnings_series.append(float(daily_earnings))
+        
+        # Daily orders count
+        daily_orders = seller_items.filter(
+            order__created_at__date=day
+        ).values('order').distinct().count()
+        orders_series.append(daily_orders)
+
     context = {
-        'products': products, 
-        'orders_count': orders_count,
-        'total_earnings': total_earnings
+        'products_count': products.count(), 
+        'orders_count': seller_items.values('order').distinct().count(),
+        'active_orders': active_orders,
+        'success_orders': success_orders,
+        'cancelled_orders': cancelled_orders,
+        'returned_orders': returned_orders,
+        'total_earnings': total_earnings,
+        'labels': labels,
+        'earnings_series': earnings_series,
+        'orders_series': orders_series,
     }
     return render(request, 'store/seller_dashboard.html', context)
+
+
+@login_required(login_url='login')
+def seller_products(request):
+    if not request.user.profile.is_seller:
+        return redirect('dashboard')
+    
+    products = Product.objects.filter(seller=request.user)
+    context = {'products': products}
+    return render(request, 'store/seller_products.html', context)
 
 
 @login_required(login_url='login')
@@ -482,9 +559,21 @@ def seller_orders(request):
     if not request.user.profile.is_seller:
         return redirect('dashboard')
     
-    # Fetch orders that contain items belonging to this seller
-    seller_items = OrderItem.objects.filter(product__seller=request.user).select_related('order', 'product', 'order__user')
+    status_filter = request.GET.get('status')
     
+    # Fetch orders that contain items belonging to this seller
+    seller_items = OrderItem.objects.filter(product__seller=request.user).select_related('order', 'product', 'order__user').prefetch_related('product__extra_images')
+    
+    if status_filter:
+        if status_filter == 'success':
+            seller_items = seller_items.filter(order__status='delivered')
+        elif status_filter == 'cancelled':
+            seller_items = seller_items.filter(order__status='cancelled')
+        elif status_filter == 'returned':
+            seller_items = seller_items.filter(order__status='returned')
+        elif status_filter == 'active':
+            seller_items = seller_items.exclude(order__status__in=['delivered', 'cancelled', 'returned'])
+
     # Group by order for the template
     orders_dict = {}
     for item in seller_items:
@@ -497,66 +586,97 @@ def seller_orders(request):
         orders_dict[item.order.id]['items'].append(item)
         orders_dict[item.order.id]['seller_total'] += item.subtotal
         
-    context = {'orders': orders_dict.values()}
+    context = {
+        'orders': orders_dict.values(),
+        'current_status': status_filter
+    }
     return render(request, 'store/seller_orders.html', context)
 
+
+from .forms import ProductForm, ProductVariationFormSet, ProductImageFormSet
 
 @login_required(login_url='login')
 def add_product(request):
     if not request.user.profile.is_seller:
         return redirect('dashboard')
-    categories = Category.objects.all()
+    
     if request.method == 'POST':
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        price = request.POST.get('price')
-        discount_price = request.POST.get('discount_price') or None
-        stock = request.POST.get('stock', 0)
-        category_id = request.POST.get('category')
-        image = request.FILES.get('image')
-        is_featured = request.POST.get('is_featured') == 'on'
+        form = ProductForm(request.POST, request.FILES)
+        variation_formset = ProductVariationFormSet(request.POST, prefix='variations')
+        image_formset = ProductImageFormSet(request.POST, request.FILES, prefix='images')
+        
+        if form.is_valid() and variation_formset.is_valid() and image_formset.is_valid():
+            product = form.save(commit=False)
+            product.seller = request.user
+            product.save()
+            
+            # Save variations
+            variations = variation_formset.save(commit=False)
+            for variation in variations:
+                variation.product = product
+                variation.save()
+            
+            # Save images
+            images = image_formset.save(commit=False)
+            for image in images:
+                image.product = product
+                image.save()
+            
+            # Handle deletions
+            for obj in variation_formset.deleted_objects:
+                obj.delete()
+            for obj in image_formset.deleted_objects:
+                obj.delete()
 
-        category = Category.objects.filter(id=category_id).first()
-        product = Product.objects.create(
-            seller=request.user,
-            category=category,
-            name=name,
-            description=description,
-            price=price,
-            discount_price=discount_price,
-            stock=stock,
-            image=image,
-            is_featured=is_featured,
-        )
-        # Extra images
-        for img in request.FILES.getlist('extra_images'):
-            ProductImage.objects.create(product=product, image=img)
-
-        messages.success(request, 'Product listed successfully!')
-        return redirect('seller_dashboard')
-    return render(request, 'store/product_form.html', {'categories': categories, 'action': 'Add'})
+            messages.success(request, 'Product listed successfully!')
+            return redirect('seller_dashboard')
+    else:
+        form = ProductForm()
+        variation_formset = ProductVariationFormSet(prefix='variations')
+        image_formset = ProductImageFormSet(prefix='images')
+    
+    context = {
+        'form': form,
+        'variation_formset': variation_formset,
+        'image_formset': image_formset,
+        'action': 'Add'
+    }
+    return render(request, 'store/product_form.html', context)
 
 
 @login_required(login_url='login')
 def edit_product(request, product_id):
     product = get_object_or_404(Product, id=product_id, seller=request.user)
-    categories = Category.objects.all()
+    
     if request.method == 'POST':
-        product.name = request.POST.get('name')
-        product.description = request.POST.get('description')
-        product.price = request.POST.get('price')
-        product.discount_price = request.POST.get('discount_price') or None
-        product.stock = request.POST.get('stock', 0)
-        category_id = request.POST.get('category')
-        product.category = Category.objects.filter(id=category_id).first()
-        if request.FILES.get('image'):
-            product.image = request.FILES.get('image')
-        product.is_featured = request.POST.get('is_featured') == 'on'
-        product.slug = ''  # force regeneration
-        product.save()
-        messages.success(request, 'Product updated!')
-        return redirect('seller_dashboard')
-    return render(request, 'store/product_form.html', {'categories': categories, 'product': product, 'action': 'Edit'})
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        variation_formset = ProductVariationFormSet(request.POST, instance=product, prefix='variations')
+        image_formset = ProductImageFormSet(request.POST, request.FILES, instance=product, prefix='images')
+        
+        if form.is_valid() and variation_formset.is_valid() and image_formset.is_valid():
+            product = form.save()
+            variation_formset.save()
+            image_formset.save()
+            
+            # Update slug
+            product.slug = ''  # force regeneration
+            product.save()
+            
+            messages.success(request, 'Product updated!')
+            return redirect('seller_dashboard')
+    else:
+        form = ProductForm(instance=product)
+        variation_formset = ProductVariationFormSet(instance=product, prefix='variations')
+        image_formset = ProductImageFormSet(instance=product, prefix='images')
+    
+    context = {
+        'form': form,
+        'variation_formset': variation_formset,
+        'image_formset': image_formset,
+        'product': product,
+        'action': 'Edit'
+    }
+    return render(request, 'store/product_form.html', context)
 
 
 @login_required(login_url='login')
@@ -565,3 +685,65 @@ def delete_product(request, product_id):
     product.delete()
     messages.success(request, 'Product deleted.')
     return redirect('seller_dashboard')
+
+
+@login_required(login_url='login')
+def ajax_add_color(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        code = request.POST.get('code', '').strip() or '#000000'
+        if name:
+            color, created = Color.objects.get_or_create(name__iexact=name, defaults={'name': name, 'code': code})
+            return JsonResponse({'status': 'success', 'id': color.id, 'name': color.name})
+    return JsonResponse({'status': 'error', 'message': 'Invalid data'})
+
+
+@login_required(login_url='login')
+def update_order_status(request, order_id):
+    if not request.user.profile.is_seller:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+    
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        allowed_statuses = ['pending', 'processing', 'cancelled', 'return_approved']
+        
+        if new_status not in allowed_statuses:
+            return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
+        
+        order = get_object_or_404(Order, id=order_id)
+        
+        # Verify this order contains items from this seller
+        has_seller_items = OrderItem.objects.filter(order=order, product__seller=request.user).exists()
+        if not has_seller_items:
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+        
+        # Logic for status transitions
+        if order.status in ['pending', 'processing']:
+            if new_status not in ['pending', 'processing', 'cancelled']:
+                return JsonResponse({'status': 'error', 'message': 'Invalid status transition'}, status=400)
+        elif order.status == 'return_requested':
+            if new_status not in ['return_requested', 'return_approved']:
+                return JsonResponse({'status': 'error', 'message': 'Sellers can only approve or keep return requested status'}, status=400)
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Order is in a state handled by Admin and cannot be changed by Seller'}, status=400)
+
+        order.status = new_status
+        order.save()
+        
+        return JsonResponse({
+            'status': 'success', 
+            'new_status': order.status, 
+            'display_status': order.get_status_display()
+        })
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+@login_required(login_url='login')
+def ajax_add_size(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if name:
+            size, created = Size.objects.get_or_create(name__iexact=name, defaults={'name': name})
+            return JsonResponse({'status': 'success', 'id': size.id, 'name': size.name})
+    return JsonResponse({'status': 'error', 'message': 'Invalid data'})

@@ -115,7 +115,11 @@
                     {% endif %}
                     <div class="summary-row">
                         <span>Shipping</span>
+                        {% if shipping_charge > 0 %}
+                        <span>৳{{ shipping_charge|floatformat:2 }}</span>
+                        {% else %}
                         <span class="free-ship">Free</span>
+                        {% endif %}
                     </div>
                     <div class="summary-row total">
                         <span>Total</span>

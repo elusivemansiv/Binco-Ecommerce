@@ -196,6 +196,9 @@ class Order(models.Model):
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
+        ('return_requested', 'Return Requested'),
+        ('return_approved', 'Return Approved'),
+        ('returned', 'Successfully Returned'),
     ]
     PAYMENT_CHOICES = [
         ('cod', 'Cash on Delivery'),
@@ -214,6 +217,7 @@ class Order(models.Model):
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='cod')
+    return_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -223,8 +227,8 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk:
-            # If the status is changing to cancelled
-            if self.status == 'cancelled' and self._original_status != 'cancelled':
+            # If the status is changing to cancelled or returned
+            if self.status in ['cancelled', 'returned'] and self._original_status not in ['cancelled', 'returned']:
                 for item in self.items.all():
                     if item.product:
                         # Restore stock to variation if it exists
@@ -240,8 +244,8 @@ class Order(models.Model):
                             item.product.stock += item.quantity
                             item.product.save(update_fields=['stock'])
 
-            # If the status is changing from cancelled back to something else (uncancelled)
-            elif self._original_status == 'cancelled' and self.status != 'cancelled':
+            # If the status is changing from cancelled/returned back to something else (uncancelled/unreturned)
+            elif self._original_status in ['cancelled', 'returned'] and self.status not in ['cancelled', 'returned']:
                 for item in self.items.all():
                     if item.product:
                         variation = ProductVariation.objects.filter(
@@ -316,6 +320,31 @@ class HomeSlider(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ShippingConfig(models.Model):
+    shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=50.00)
+    free_shipping_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=999.00)
+    is_active = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Shipping Configuration'
+        verbose_name_plural = 'Shipping Configuration'
+
+    def save(self, *args, **kwargs):
+        # We ensure only one instance exists
+        if not self.pk and ShippingConfig.objects.exists():
+            return
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_config(cls):
+        config, created = cls.objects.get_or_create(id=1)
+        return config
+
+    def __str__(self):
+        return f"Shipping: ৳{self.shipping_charge} | Free over: ৳{self.free_shipping_threshold}"
 
 
 class PromotionCard(models.Model):

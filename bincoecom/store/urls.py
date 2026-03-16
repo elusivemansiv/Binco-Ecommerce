@@ -21,6 +21,7 @@ urlpatterns = [
     path('order/success/<int:order_id>/', views.order_success, name='order_success'),
     path('orders/', views.order_history, name='order_history'),
     path('orders/<int:order_id>/', views.order_detail, name='order_detail'),
+    path('orders/<int:order_id>/request-return/', views.request_return, name='request_return'),
 
     # Wishlist
     path('wishlist/', views.wishlist_view, name='wishlist'),
@@ -29,7 +30,11 @@ urlpatterns = [
     # Seller
     path('seller/', views.seller_dashboard, name='seller_dashboard'),
     path('seller/orders/', views.seller_orders, name='seller_orders'),
+    path('seller/products/', views.seller_products, name='seller_products'),
     path('seller/product/add/', views.add_product, name='add_product'),
     path('seller/product/<int:product_id>/edit/', views.edit_product, name='edit_product'),
     path('seller/product/<int:product_id>/delete/', views.delete_product, name='delete_product'),
+    path('seller/add-color/', views.ajax_add_color, name='ajax_add_color'),
+    path('seller/add-size/', views.ajax_add_size, name='ajax_add_size'),
+    path('seller/order/<int:order_id>/update-status/', views.update_order_status, name='update_order_status'),
 ]

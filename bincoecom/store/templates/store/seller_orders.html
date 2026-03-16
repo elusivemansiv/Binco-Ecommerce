@@ -9,10 +9,32 @@
             <p>View and track orders containing your products.</p>
         </div>
         <div class="seller-actions-top">
+            <a href="{% url 'seller_products' %}" class="btn btn-seller-secondary">
+                <i class="fas fa-box me-1"></i> My Products
+            </a>
             <a href="{% url 'seller_dashboard' %}" class="btn btn-seller-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
             </a>
         </div>
+    </div>
+
+    <!-- Status Filter Tabs -->
+    <div class="seller-orders-nav d-flex flex-wrap gap-2 mt-4">
+        <a href="{% url 'seller_orders' %}" class="btn btn-sm px-3 {% if not current_status %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            All Orders
+        </a>
+        <a href="{% url 'seller_orders' %}?status=active" class="btn btn-sm px-3 {% if current_status == 'active' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Active
+        </a>
+        <a href="{% url 'seller_orders' %}?status=success" class="btn btn-sm px-3 {% if current_status == 'success' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Successful
+        </a>
+        <a href="{% url 'seller_orders' %}?status=cancelled" class="btn btn-sm px-3 {% if current_status == 'cancelled' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Cancelled
+        </a>
+        <a href="{% url 'seller_orders' %}?status=returned" class="btn btn-sm px-3 {% if current_status == 'returned' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Returned
+        </a>
     </div>
 
     {% if orders %}
@@ -24,14 +46,37 @@
                     <span class="fw-bold text-primary">Order #{{ order_data.order.id }}</span>
                     <span class="ms-3 text-muted small"><i class="far fa-calendar-alt me-1"></i> {{ order_data.order.created_at|date:"M d, Y H:i" }}</span>
                 </div>
-                <div>
-                    <span class="badge {% if order_data.order.status == 'delivered' %}bg-success{% elif order_data.order.status == 'cancelled' %}bg-danger{% else %}bg-info text-dark{% endif %}">
+                <div class="status-manager d-flex gap-2 align-items-center">
+                    {% if order_data.order.status in 'pending,processing,return_requested' %}
+                    <select class="form-select form-select-sm status-select" 
+                            style="width: 120px; border-color: #dee2e6;">
+                        {% if order_data.order.status in 'pending,processing' %}
+                            <option value="pending" {% if order_data.order.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="processing" {% if order_data.order.status == 'processing' %}selected{% endif %}>Processing</option>
+                            <option value="cancelled" {% if order_data.order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        {% elif order_data.order.status == 'return_requested' %}
+                            <option value="return_requested" selected>Return Requested</option>
+                            <option value="return_approved">Approve Return</option>
+                        {% endif %}
+                    </select>
+                    <button class="btn btn-primary btn-sm save-status-btn" data-order-id="{{ order_data.order.id }}" title="Save">
+                        Save
+                    </button>
+                    {% else %}
+                    <span class="badge {% if order_data.order.status == 'delivered' %}bg-success{% elif order_data.order.status == 'cancelled' or order_data.order.status == 'returned' %}bg-danger{% elif order_data.order.status == 'return_approved' %}bg-info{% else %}bg-info text-dark{% endif %}">
                         {{ order_data.order.get_status_display }}
                     </span>
+                    {% endif %}
                 </div>
             </div>
             
             <div class="p-3">
+                {% if order_data.order.return_reason %}
+                <div class="alert alert-warning mb-3 py-2 px-3 small">
+                    <strong><i class="fas fa-undo me-1"></i> Return Reason:</strong> {{ order_data.order.return_reason }}
+                </div>
+                {% endif %}
+                
                 <div class="row">
                     <div class="col-md-8 border-end">
                         <h6 class="text-muted mb-3">Your Items in this Order:</h6>
@@ -51,8 +96,8 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                {% if item.product.image %}
-                                                <img src="{{ item.product.image.url }}" alt="" class="me-2 rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                                {% if item.selected_image %}
+                                                <img src="{{ item.selected_image.url }}" alt="" class="me-2 rounded" style="width: 40px; height: 40px; object-fit: cover;">
                                                 {% endif %}
                                                 <span class="small">{{ item.product_name }}</span>
                                             </div>
@@ -110,4 +155,61 @@
     .btn-seller-secondary { background: white; border: 1px solid #dee2e6; color: #495057; font-weight: 500; }
     .btn-seller-secondary:hover { background: #f8f9fa; border-color: #ced4da; }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const saveButtons = document.querySelectorAll('.save-status-btn');
+    
+    saveButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const orderId = this.dataset.orderId;
+            const statusManager = this.closest('.status-manager');
+            const selectElement = statusManager.querySelector('.status-select');
+            const newStatus = selectElement.value;
+            const btnElement = this;
+            
+            btnElement.disabled = true;
+            btnElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            selectElement.disabled = true;
+            
+            const formData = new FormData();
+            formData.append('status', newStatus);
+            
+            fetch(`/seller/order/${orderId}/update-status/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (typeof showToast === 'function') {
+                        showToast(`Status updated to ${data.display_status}`);
+                    }
+                    if (['cancelled', 'return_approved'].includes(newStatus)) {
+                        location.reload();
+                    }
+                } else {
+                    alert('Error: ' + data.message);
+                    location.reload(); 
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred.');
+                location.reload();
+            })
+            .finally(() => {
+                btnElement.disabled = false;
+                btnElement.innerHTML = 'Save';
+                selectElement.disabled = false;
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

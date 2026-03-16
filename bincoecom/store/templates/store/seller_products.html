@@ -1,0 +1,117 @@
+{% extends 'layout.html' %}
+{% block title %}My Products – Binco Seller{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="seller-header">
+        <div>
+            <h2><i class="fas fa-box me-2"></i>My Products</h2>
+            <p>Manage your listed products and stock levels.</p>
+        </div>
+        <div class="seller-actions-top d-flex flex-wrap gap-2">
+            <a href="{% url 'add_product' %}" class="btn-add-product">
+                <i class="fas fa-plus me-2"></i>List New Product
+            </a>
+            <a href="{% url 'seller_dashboard' %}" class="btn btn-seller-secondary">
+                <i class="fas fa-chart-line me-1"></i> Dashboard
+            </a>
+            <a href="{% url 'seller_orders' %}" class="btn btn-seller-secondary">
+                <i class="fas fa-shopping-bag me-1"></i> Orders Received
+            </a>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    {% if products %}
+    <div class="orders-table-wrap mt-4">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock Status</th>
+                    <th>Featured</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" class="seller-thumb" alt="">
+                        {% else %}
+                        <div class="no-image tiny"><i class="fas fa-image"></i></div>
+                        {% endif %}
+                    </td>
+                    <td><a href="{% url 'product_detail' product.id %}" class="fw-bold">{{ product.name }}</a></td>
+                    <td>{{ product.category.name|default:'–' }}</td>
+                    <td>
+                        ৳{{ product.price }}
+                        {% if product.discount_price %}<span class="text-danger ms-1">→ ৳{{ product.discount_price }}</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if product.variations.exists %}
+                        <div class="variation-list small">
+                            {% for v in product.variations.all %}
+                            <div class="variation-item text-nowrap">
+                                <span class="badge bg-light text-dark border">
+                                    {{ v.color.name|default:'N/A' }} / {{ v.size.name|default:'N/A' }}
+                                </span>
+                                <span class="fw-bold {% if v.stock == 0 %}text-danger{% else %}text-success{% endif %}">
+                                    : {{ v.stock }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="{% if product.stock == 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                            {{ product.stock }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>{% if product.is_featured %}<span class="badge bg-warning text-dark">Yes</span>{% else %}No{% endif %}</td>
+                    <td class="action-btns">
+                        <a href="{% url 'edit_product' product.id %}" class="btn-edit" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'delete_product' product.id %}" class="btn-del" title="Delete"
+                           onclick="return confirm('Delete this product?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state mt-5">
+        <i class="fas fa-box-open"></i>
+        <h3>No products listed yet</h3>
+        <p>Start selling by listing your first product!</p>
+        <a href="{% url 'add_product' %}" class="btn-shop mt-3">Add Product</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .seller-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+    .no-image.tiny { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; color: #dee2e6; border-radius: 6px; }
+    .btn-seller-secondary { background: white; border: 1px solid #dee2e6; color: #495057; font-weight: 500; }
+    .btn-seller-secondary:hover { background: #f8f9fa; border-color: #ced4da; }
+    .btn-add-product { background: #000; color: #fff; padding: 8px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s; }
+    .btn-add-product:hover { background: #333; color: #fff; transform: translateY(-1px); }
+    .orders-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+    .orders-table th { padding: 12px; font-weight: 600; color: #6c757d; border-bottom: 2px solid #f8f9fa; }
+    .orders-table td { padding: 15px 12px; background: white; border-top: 1px solid #f8f9fa; border-bottom: 1px solid #f8f9fa; }
+    .orders-table tr:hover td { background: #fafafa; }
+    .btn-edit, .btn-del { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; margin: 0 2px; transition: all 0.2s; }
+    .btn-edit { background: #f0f7ff; color: #007bff; }
+    .btn-edit:hover { background: #007bff; color: #fff; }
+    .btn-del { background: #fff5f5; color: #dc3545; }
+    .btn-del:hover { background: #dc3545; color: #fff; }
+</style>
+{% endblock %}

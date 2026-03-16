@@ -23,7 +23,7 @@
 <!-- ========== TOP BAR ========== -->
 <div class="top-bar">
     <div class="container d-flex justify-content-between align-items-center">
-        <span>🇧🇩 Free shipping on orders over ৳999</span>
+        <span>🇧🇩 {% if shipping_conf.is_active %}Free shipping on orders over ৳{{ shipping_conf.free_shipping_threshold|floatformat:0 }}{% else %}Premium Shopping Experience{% endif %}</span>
         <div class="d-flex gap-3">
             {% if user.is_authenticated %}
                 <span>Hi, {{ user.first_name|default:user.username }}!</span>
@@ -244,6 +244,19 @@
             }, 5000);
         });
     });
+
+    function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
 </script>
 {% block extra_js %}{% endblock %}
 </body>

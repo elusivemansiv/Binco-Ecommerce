@@ -1,4 +1,4 @@
-from .models import Cart, Category
+from .models import Cart, Category, ShippingConfig
 
 
 def cart_count(request):
@@ -14,3 +14,7 @@ def cart_count(request):
 
 def categories(request):
     return {'all_categories': Category.objects.all()}
+
+
+def shipping_config(request):
+    return {'shipping_conf': ShippingConfig.get_config()}

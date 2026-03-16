@@ -15,12 +15,46 @@
                 </div>
                 <!-- Timeline -->
                 <div class="order-timeline">
-                    {% for step, label in order.STATUS_CHOICES %}
-                    <div class="timeline-step {% if order.status == step %}active{% elif order.status == 'delivered' or order.status == 'shipped' and step == 'pending' or step == 'processing' %}done{% endif %}">
-                        <div class="timeline-dot"></div>
-                        <span>{{ label }}</span>
-                    </div>
-                    {% endfor %}
+                    {% if order.status == 'cancelled' %}
+                        <div class="timeline-step active">
+                            <div class="timeline-dot bg-danger"></div>
+                            <span class="text-danger fw-bold">Order Cancelled</span>
+                        </div>
+                    {% elif order.status in 'return_requested,return_approved,returned' %}
+                        <div class="timeline-step done">
+                            <div class="timeline-dot"></div>
+                            <span>Delivered</span>
+                        </div>
+                        <div class="timeline-step {% if order.status == 'return_requested' %}active{% else %}done{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <span>Return Requested</span>
+                        </div>
+                        <div class="timeline-step {% if order.status == 'return_approved' %}active{% elif order.status == 'returned' %}done{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <span>Return Approved</span>
+                        </div>
+                        <div class="timeline-step {% if order.status == 'returned' %}active{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <span>Returned</span>
+                        </div>
+                    {% else %}
+                        <div class="timeline-step {% if order.status == 'pending' %}active{% else %}done{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <span>Pending</span>
+                        </div>
+                        <div class="timeline-step {% if order.status == 'processing' %}active{% elif order.status in 'shipped,delivered' %}done{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <span>Processing</span>
+                        </div>
+                        <div class="timeline-step {% if order.status == 'shipped' %}active{% elif order.status == 'delivered' %}done{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <span>Shipped</span>
+                        </div>
+                        <div class="timeline-step {% if order.status == 'delivered' %}active{% endif %}">
+                            <div class="timeline-dot"></div>
+                            <span>Delivered</span>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <h4 class="mt-4 mb-3">Items Ordered</h4>
@@ -67,11 +101,65 @@
                     </div>
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-4 d-flex justify-content-between align-items-center">
                     <a href="{% url 'order_history' %}" class="btn-continue">← My Orders</a>
+                    
+                    {% if order.status == 'delivered' or order.status == 'shipped' %}
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#returnModal">
+                        <i class="fas fa-undo me-1"></i> Request Return
+                    </button>
+                    {% elif order.status == 'return_requested' %}
+                    <span class="text-warning fw-bold"><i class="fas fa-clock me-1"></i> Return Requested</span>
+                    {% elif order.status == 'return_approved' %}
+                    <span class="text-info fw-bold"><i class="fas fa-check-circle me-1"></i> Return Approved</span>
+                    {% elif order.status == 'returned' %}
+                    <span class="text-success fw-bold"><i class="fas fa-check-double me-1"></i> Successfully Returned</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Return Request Modal -->
+{% if order.status == 'delivered' or order.status == 'shipped' %}
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{% url 'request_return' order.id %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnModalLabel">Request Return for Order #{{ order.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="return_reason" class="form-label">Reason for Return *</label>
+                        <textarea class="form-control" id="return_reason" name="reason" rows="4" placeholder="Please describe the issue (e.g., wrong size, defective product)..." required></textarea>
+                    </div>
+                    <p class="small text-muted">Note: The seller will review your request. Once approved by the seller and admin, the product will be picked up and your stock/payment will be handled.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#returnModal') {
+        var modalEl = document.getElementById('returnModal');
+        if (modalEl) {
+            var returnModal = new bootstrap.Modal(modalEl);
+            returnModal.show();
+        }
+    }
+});
+</script>
+{% endblock %}
 {% endblock %}

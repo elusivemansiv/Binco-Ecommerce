@@ -622,6 +622,9 @@ input, textarea, select { font-family: inherit; }
 .badge-status.shipped { background: #ede9fe; color: #5b21b6; }
 .badge-status.delivered { background: #dcfce7; color: #166534; }
 .badge-status.cancelled { background: #fee2e2; color: #991b1b; }
+.badge-status.return_requested { background: #ffedd5; color: #9a3412; }
+.badge-status.return_approved { background: #e0f2fe; color: #075985; }
+.badge-status.returned { background: #f1f5f9; color: #475569; }
 .badge-status.large { font-size: 14px; padding: 6px 16px; }
 
 /* ─── ORDERS TABLE ─── */
@@ -675,6 +678,8 @@ input, textarea, select { font-family: inherit; }
 .auth-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,100,210,0.3); }
 .auth-switch { text-align: center; font-size: 14px; color: var(--text-muted); }
 .auth-switch a { color: var(--primary); font-weight: 600; }
+.forgot-password-link { font-size: 13px; color: var(--primary); font-weight: 500; transition: var(--transition); }
+.forgot-password-link:hover { text-decoration: underline; color: var(--primary-dark); }
 
 /* ─── DASHBOARD ─── */
 .dashboard-grid { display: grid; grid-template-columns: 260px 1fr; gap: 24px; }
@@ -729,6 +734,22 @@ input, textarea, select { font-family: inherit; }
 .form-control, .form-select { border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s; background: #fff; }
 .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,100,210,0.08); }
 .form-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); display: block; }
+
+/* Password Toggle */
+.password-group { position: relative; }
+.password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    cursor: pointer;
+    z-index: 10;
+    padding: 5px;
+    transition: var(--transition);
+}
+.password-toggle:hover { color: var(--primary); }
+.password-group .form-control { padding-right: 45px; }
 
 /* ─── DASHBOARD VARIATIONS ─── */
 .variation-list {

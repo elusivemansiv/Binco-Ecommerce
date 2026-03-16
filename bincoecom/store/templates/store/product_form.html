@@ -9,71 +9,435 @@
                 <h3><i class="fas fa-box me-2"></i>{{ action }} Product</h3>
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
+                    
+                    {% if form.errors or variation_formset.errors or image_formset.errors %}
+                    <div class="alert alert-danger mt-3">
+                        <h6 class="fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Please fix the following errors:</h6>
+                        <ul class="mb-0 small">
+                            {% for field, errors in form.errors.items %}
+                                <li>{{ field|capfirst }}: {{ errors|striptags }}</li>
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                            {% if variation_formset.non_form_errors %}
+                                <li>Variations: {{ variation_formset.non_form_errors|striptags }}</li>
+                            {% endif %}
+                            {% if image_formset.non_form_errors %}
+                                <li>Images: {{ image_formset.non_form_errors|striptags }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
                     <div class="row g-3 mt-2">
                         <div class="col-12">
                             <label class="form-label">Product Name *</label>
-                            <input type="text" name="name" class="form-control" required
-                                   value="{{ product.name|default:'' }}">
+                            {{ form.name }}
                         </div>
                         <div class="col-12">
                             <label class="form-label">Description *</label>
-                            <textarea name="description" class="form-control" rows="4" required>{{ product.description|default:'' }}</textarea>
+                            {{ form.description }}
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Category</label>
-                            <select name="category" class="form-select">
-                                <option value="">-- Select Category --</option>
-                                {% for cat in categories %}
-                                <option value="{{ cat.id }}"
-                                    {% if product and product.category_id == cat.id %}selected{% endif %}>
-                                    {{ cat.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            {{ form.category }}
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Price (৳) *</label>
-                            <input type="number" name="price" class="form-control" step="0.01" required
-                                   value="{{ product.price|default:'' }}">
+                            {{ form.price }}
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Discount Price (৳)</label>
-                            <input type="number" name="discount_price" class="form-control" step="0.01"
-                                   value="{{ product.discount_price|default:'' }}">
+                            {{ form.discount_price }}
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Stock Quantity *</label>
-                            <input type="number" name="stock" class="form-control" min="0" required
-                                   value="{{ product.stock|default:'0' }}">
+                            <label class="form-label">Total Stock Quantity *</label>
+                            {{ form.stock }}
+                            <small class="text-muted">Managed by variations if they exist.</small>
                         </div>
                         <div class="col-md-6 d-flex align-items-end">
                             <div class="form-check">
-                                <input type="checkbox" name="is_featured" class="form-check-input" id="is_featured"
-                                       {% if product.is_featured %}checked{% endif %}>
-                                <label class="form-check-label" for="is_featured">Mark as Featured</label>
+                                {{ form.is_featured }}
+                                <label class="form-check-label" for="id_is_featured">Mark as Featured</label>
                             </div>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Main Product Image</label>
+                            <label class="form-label">Main Product Image *</label>
                             {% if product and product.image %}
                             <div class="mb-2"><img src="{{ product.image.url }}" height="80" class="rounded"> <small class="text-muted">Current image</small></div>
                             {% endif %}
-                            <input type="file" name="image" accept="image/*" class="form-control">
+                            {{ form.image }}
                         </div>
-                        <div class="col-12">
-                            <label class="form-label">Additional Images</label>
-                            <input type="file" name="extra_images" accept="image/*" multiple class="form-control">
+
+                        <!-- Product Variations -->
+                        <div class="col-12 mt-4">
+                            <h4 class="mb-3"><i class="fas fa-layer-group me-2"></i>Product Variations</h4>
+                            {{ variation_formset.management_form }}
+                            <div id="variation-formset-container">
+                                {% for vform in variation_formset %}
+                                <div class="variation-form border p-3 rounded mb-3 bg-light">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label d-flex justify-content-between">
+                                                Color
+                                                <button type="button" class="btn btn-link p-0 text-decoration-none add-new-color-trigger" style="font-size: 0.8rem;">
+                                                    <i class="fas fa-plus-circle"></i> Add New
+                                                </button>
+                                            </label>
+                                            {{ vform.color }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label d-flex justify-content-between">
+                                                Size
+                                                <button type="button" class="btn btn-link p-0 text-decoration-none add-new-size-trigger" style="font-size: 0.8rem;">
+                                                    <i class="fas fa-plus-circle"></i> Add New
+                                                </button>
+                                            </label>
+                                            {{ vform.size }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Stock</label>
+                                            {{ vform.stock }}
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end">
+                                            {% if vform.instance.pk %}
+                                            <div class="form-check mb-2">
+                                                {{ vform.DELETE }}
+                                                <label class="text-danger small"><i class="fas fa-trash"></i></label>
+                                            </div>
+                                            {% else %}
+                                            <button type="button" class="btn btn-outline-danger btn-sm mb-2 remove-variation-btn"><i class="fas fa-times"></i></button>
+                                            {% endif %}
+                                        </div>
+                                        {% for hidden in vform.hidden_fields %}
+                                            {{ hidden }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-variation-btn">
+                                <i class="fas fa-plus me-1"></i> Add Variation
+                            </button>
+                        </div>
+
+                        <!-- Additional Images -->
+                        <div class="col-12 mt-4">
+                            <h4 class="mb-3"><i class="fas fa-images me-2"></i>Additional Images</h4>
+                            {{ image_formset.management_form }}
+                            <div id="image-formset-container">
+                                {% for iform in image_formset %}
+                                <div class="image-form border p-3 rounded mb-3 bg-light">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Upload Image</label>
+                                            {% if iform.instance.pk %}
+                                            <div class="mb-2"><img src="{{ iform.instance.image.url }}" height="50" class="rounded"></div>
+                                            {% endif %}
+                                            {{ iform.image }}
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label class="form-label d-flex justify-content-between">
+                                                Link to Color (Optional)
+                                                <button type="button" class="btn btn-link p-0 text-decoration-none add-new-color-trigger" style="font-size: 0.8rem;">
+                                                    <i class="fas fa-plus-circle"></i> Add New
+                                                </button>
+                                            </label>
+                                            {{ iform.color }}
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end">
+                                            {% if iform.instance.pk %}
+                                            <div class="form-check mb-2">
+                                                {{ iform.DELETE }}
+                                                <label class="text-danger small"><i class="fas fa-trash"></i></label>
+                                            </div>
+                                            {% else %}
+                                            <button type="button" class="btn btn-outline-danger btn-sm mb-2 remove-image-btn"><i class="fas fa-times"></i></button>
+                                            {% endif %}
+                                        </div>
+                                        {% for hidden in iform.hidden_fields %}
+                                            {{ hidden }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-image-btn">
+                                <i class="fas fa-plus me-1"></i> Add More Image
+                            </button>
                         </div>
                     </div>
+
                     <div class="mt-4 d-flex gap-3">
                         <button type="submit" class="btn-checkout">
                             <i class="fas fa-save me-2"></i>{{ action }} Product
                         </button>
-                        <a href="{% url 'seller_dashboard' %}" class="btn-continue">Cancel</a>
+                        <a href="{% url 'seller_products' %}" class="btn-continue">Cancel</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Add Color Modal -->
+<div class="modal fade" id="addColorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Color</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Color Name</label>
+                    <input type="text" id="new-color-name" class="form-control" placeholder="e.g. Crimson">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" id="save-color-btn">Save Color</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Size Modal -->
+<div class="modal fade" id="addSizeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Size</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Size Name</label>
+                    <input type="text" id="new-size-name" class="form-control" placeholder="e.g. XXL, 42nd">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" id="save-size-btn">Save Size</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Formset Management
+    const addVariationBtn = document.getElementById('add-variation-btn');
+    const variationContainer = document.getElementById('variation-formset-container');
+    const totalVariationForms = document.getElementById('id_variations-TOTAL_FORMS');
+
+    if (addVariationBtn) {
+        addVariationBtn.addEventListener('click', function() {
+            const formCount = parseInt(totalVariationForms.value);
+            const newForm = variationContainer.children[0].cloneNode(true);
+            
+            newForm.querySelectorAll('input, select').forEach(input => {
+                input.value = '';
+                const oldName = input.name;
+                const oldId = input.id;
+                if (oldName) input.name = oldName.replace(/variations-\d+-/, `variations-${formCount}-`);
+                if (oldId) input.id = oldId.replace(/id_variations-\d+-/, `id_variations-${formCount}-`);
+                if (input.type === 'number') input.value = '0';
+            });
+
+            newForm.querySelectorAll('label').forEach(label => {
+                if (label.getAttribute('for')) {
+                    label.setAttribute('for', label.getAttribute('for').replace(/id_variations-\d+-/, `id_variations-${formCount}-`));
+                }
+            });
+
+            newForm.querySelectorAll('input[type="hidden"][name$="-id"]').forEach(h => h.value = '');
+            newForm.querySelectorAll('.form-check').forEach(c => c.remove());
+            
+            if (!newForm.querySelector('.remove-variation-btn')) {
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-outline-danger btn-sm mb-2 remove-variation-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                newForm.querySelector('.col-md-1').appendChild(removeBtn);
+            }
+
+            variationContainer.appendChild(newForm);
+            totalVariationForms.value = formCount + 1;
+        });
+    }
+
+    if (variationContainer) {
+        variationContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-variation-btn')) {
+                e.target.closest('.variation-form').remove();
+            }
+        });
+    }
+
+    const addImageBtn = document.getElementById('add-image-btn');
+    const imageContainer = document.getElementById('image-formset-container');
+    const totalImageForms = document.getElementById('id_images-TOTAL_FORMS');
+
+    if (addImageBtn) {
+        addImageBtn.addEventListener('click', function() {
+            const formCount = parseInt(totalImageForms.value);
+            const newForm = imageContainer.children[0].cloneNode(true);
+            
+            newForm.querySelectorAll('input, select').forEach(input => {
+                input.value = '';
+                const oldName = input.name;
+                const oldId = input.id;
+                if (oldName) input.name = oldName.replace(/images-\d+-/, `images-${formCount}-`);
+                if (oldId) input.id = oldId.replace(/id_images-\d+-/, `id_images-${formCount}-`);
+            });
+            
+            newForm.querySelectorAll('label').forEach(label => {
+                if (label.getAttribute('for')) {
+                    label.setAttribute('for', label.getAttribute('for').replace(/id_images-\d+-/, `id_images-${formCount}-`));
+                }
+            });
+
+            newForm.querySelectorAll('input[type="hidden"][name$="-id"]').forEach(h => h.value = '');
+            newForm.querySelectorAll('.form-check').forEach(c => c.remove());
+            newForm.querySelectorAll('img').forEach(img => img.remove());
+            
+            if (!newForm.querySelector('.remove-image-btn')) {
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-outline-danger btn-sm mb-2 remove-image-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                newForm.querySelector('.col-md-1').appendChild(removeBtn);
+            }
+
+            imageContainer.appendChild(newForm);
+            totalImageForms.value = formCount + 1;
+        });
+    }
+
+    if (imageContainer) {
+        imageContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-image-btn')) {
+                e.target.closest('.image-form').remove();
+            }
+        });
+    }
+
+    // Custom Options Logic
+    let addColorModal = null;
+    let addSizeModal = null;
+    
+    // Use bootstrap from window to ensure it's loaded
+    if (typeof bootstrap !== 'undefined') {
+        const colorModalEl = document.getElementById('addColorModal');
+        const sizeModalEl = document.getElementById('addSizeModal');
+        if (colorModalEl) addColorModal = new bootstrap.Modal(colorModalEl);
+        if (sizeModalEl) addSizeModal = new bootstrap.Modal(sizeModalEl);
+    } else {
+        console.error("Bootstrap is not defined. Please ensure Bootstrap JS is loaded.");
+    }
+    
+    let activeSelect = null;
+
+    document.body.addEventListener('click', function(e) {
+        if (e.target.closest('.add-new-color-trigger')) {
+            activeSelect = e.target.closest('.col-md-4, .col-md-5').querySelector('select');
+            if (addColorModal) addColorModal.show();
+            else alert("Add Color Modal initialization failed.");
+        }
+        if (e.target.closest('.add-new-size-trigger')) {
+            activeSelect = e.target.closest('.col-md-4').querySelector('select');
+            if (addSizeModal) addSizeModal.show();
+            else alert("Add Size Modal initialization failed.");
+        }
+    });
+
+    const saveColorBtn = document.getElementById('save-color-btn');
+    if (saveColorBtn) {
+        saveColorBtn.addEventListener('click', function() {
+            const nameEl = document.getElementById('new-color-name');
+            const name = nameEl.value;
+            
+            if (!name) {
+                alert("Please enter a color name.");
+                return;
+            }
+
+            fetch("{% url 'ajax_add_color' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `name=${encodeURIComponent(name)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateAllSelects('color', data.id, data.name);
+                    if (addColorModal) addColorModal.hide();
+                    nameEl.value = '';
+                    if (typeof showToast === 'function') showToast("Color added successfully!");
+                } else {
+                    alert("Error: " + (data.message || "Unknown error"));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Failed to add color. Check console for details.");
+            });
+        });
+    }
+
+    const saveSizeBtn = document.getElementById('save-size-btn');
+    if (saveSizeBtn) {
+        saveSizeBtn.addEventListener('click', function() {
+            const nameEl = document.getElementById('new-size-name');
+            const name = nameEl.value;
+            
+            if (!name) {
+                alert("Please enter a size name.");
+                return;
+            }
+
+            fetch("{% url 'ajax_add_size' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `name=${encodeURIComponent(name)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateAllSelects('size', data.id, data.name);
+                    if (addSizeModal) addSizeModal.hide();
+                    nameEl.value = '';
+                    if (typeof showToast === 'function') showToast("Size added successfully!");
+                } else {
+                    alert("Error: " + (data.message || "Unknown error"));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Failed to add size. Check console for details.");
+            });
+        });
+    }
+
+    function updateAllSelects(type, id, name) {
+        const selector = type === 'color' ? 'select[name*="color"]' : 'select[name*="size"]';
+        document.querySelectorAll(selector).forEach(select => {
+            const option = new Option(name, id);
+            select.add(option);
+            if (select === activeSelect) {
+                select.value = id;
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
