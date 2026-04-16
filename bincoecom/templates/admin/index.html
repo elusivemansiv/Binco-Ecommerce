@@ -1,0 +1,315 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_dash %}
+
+{% block coltype %}colMS{% endblock %}
+
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+    .custom-dash-container { 
+        padding: 30px 36px; 
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; 
+        background-color: #f0f2f5; 
+        min-height: 100vh;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .dash-header { margin-bottom: 24px; }
+    .dash-header h1 { font-size: 26px; font-weight: 800; color: #1a1a2e; margin: 0; display: flex; align-items: center; gap: 10px; }
+    .dash-header h1 i { color: #3498db; }
+
+    /* ── TOP ROW: Chart LEFT + Cards RIGHT ── */
+    .top-row {
+        display: grid;
+        grid-template-columns: 1fr 420px;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    @media (max-width: 1300px) { .top-row { grid-template-columns: 1fr; } }
+
+    .chart-panel {
+        background: #fff;
+        border-radius: 18px;
+        padding: 28px;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+    }
+    .chart-panel h2 { font-size: 16px; font-weight: 700; color: #2c3e50; margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; }
+    .chart-panel h2 i { color: #3498db; }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .stat-card { 
+        background: #fff; 
+        padding: 22px 20px; 
+        border-radius: 16px; 
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        position: relative; 
+        overflow: hidden; 
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.1); }
+    .stat-card::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 5px; background: #3498db; border-radius: 2px 0 0 2px; }
+    .stat-card.green::before  { background: #2ecc71; }
+    .stat-card.orange::before { background: #f39c12; }
+    .stat-card.purple::before { background: #9b59b6; }
+    .stat-card.red::before    { background: #e74c3c; }
+    .stat-card.dark::before   { background: #34495e; }
+    .stat-card .icon-bg { position: absolute; right: -8px; bottom: -14px; font-size: 60px; color: rgba(0,0,0,0.03); transform: rotate(-15deg); }
+    .stat-card h3 { font-size: 11px; color: #8b95a5; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.8px; }
+    .stat-card .value { font-size: 28px; font-weight: 900; color: #1a1a2e; line-height: 1.1; }
+    .stat-card .sub-text { font-size: 11px; color: #95a5a6; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+
+    /* ── MIDDLE ROW ── */
+    .middle-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .middle-row { grid-template-columns: 1fr; } }
+
+    .dash-panel {
+        background: #fff;
+        border-radius: 18px;
+        padding: 24px;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .dash-panel h2 { font-size: 15px; font-weight: 700; margin: 0 0 18px 0; padding-bottom: 12px; border-bottom: 1px solid #f1f2f6; color: #2c3e50; display: flex; align-items: center; gap: 8px; }
+
+    .best-sellers-list { list-style: none; padding: 0; margin: 0; }
+    .best-sellers-list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f8f9fa; }
+    .best-sellers-list li:last-child { border-bottom: none; padding-bottom: 0; }
+    .bs-info { display: flex; align-items: center; gap: 10px; }
+    .bs-rank { width: 26px; height: 26px; background: #f1f2f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: 700; color: #7f8c8d; }
+    .bs-rank.rank-1 { background: #fff9c4; color: #f39c12; }
+    .bs-rank.rank-2 { background: #f5f6fa; color: #a4b0be; }
+    .bs-rank.rank-3 { background: #fae1dd; color: #d35400; }
+    .bs-name { font-weight: 600; color: #2c3e50; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+    .bs-sales { color: #fff; font-weight: 600; background: #3498db; padding: 3px 10px; border-radius: 20px; font-size: 11px; white-space: nowrap; }
+
+    /* ── BOTTOM ROW ── */
+    .bottom-row { margin-bottom: 24px; }
+    .orders-mini-table { width: 100%; border-collapse: collapse; }
+    .orders-mini-table th { text-align: left; font-size: 11px; text-transform: uppercase; color: #95a5a6; padding: 10px 8px; border-bottom: 2px solid #f1f2f6; letter-spacing: 0.5px; }
+    .orders-mini-table td { padding: 13px 8px; font-size: 13px; border-bottom: 1px solid #f8f9fa; color: #2c3e50; }
+    .status-badge { padding: 4px 9px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .status-pending    { background: #fff9db; color: #f59f00; }
+    .status-delivered  { background: #ebfbee; color: #37b24d; }
+    .status-shipped    { background: #e7f5ff; color: #1c7ed6; }
+    .status-processing { background: #f3f0ff; color: #7048e8; }
+    .status-cancelled  { background: #fff5f5; color: #e03131; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="custom-dash-container">
+    {% get_admin_dashboard_data as d %}
+    
+    <div class="dash-header">
+        <h1><i class="fas fa-chart-line"></i> Store Intelligence</h1>
+    </div>
+
+    <!-- TOP ROW: Chart (left) + 6 Metric Cards (right) -->
+    <div class="top-row">
+
+        <!-- Revenue Chart — LEFT -->
+        <div class="chart-panel">
+            <h2><i class="fas fa-chart-area"></i> Revenue Trajectory (Last 7 Days)</h2>
+            <div style="position: relative; flex: 1; min-height: 280px;">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 6 Stat Cards — RIGHT (2 cols × 3 rows) -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-wallet icon-bg"></i>
+                <h3>Lifetime Revenue</h3>
+                <div class="value">৳{{ d.total_revenue|floatformat:2 }}</div>
+                <div class="sub-text"><i class="fas fa-arrow-up" style="color:#2ecc71;"></i> ৳{{ d.recent_revenue|floatformat:2 }} this month</div>
+            </div>
+            <div class="stat-card green">
+                <i class="fas fa-shopping-bag icon-bg"></i>
+                <h3>Total Orders</h3>
+                <div class="value">{{ d.total_orders }}</div>
+                <div class="sub-text"><i class="fas fa-calendar-alt"></i> {{ d.recent_orders }} last 30 days</div>
+            </div>
+            <div class="stat-card orange">
+                <i class="fas fa-box-open icon-bg"></i>
+                <h3>Catalog Items</h3>
+                <div class="value">{{ d.total_products }}</div>
+                <div class="sub-text"><i class="fas fa-check-circle"></i> Active products</div>
+            </div>
+            <div class="stat-card purple">
+                <i class="fas fa-users icon-bg"></i>
+                <h3>Happy Customers</h3>
+                <div class="value">{{ d.total_customers }}</div>
+                <div class="sub-text"><i class="fas fa-user-plus"></i> Verified profiles</div>
+            </div>
+            <div class="stat-card red">
+                <i class="fas fa-fire icon-bg"></i>
+                <h3>Sales Today</h3>
+                <div class="value">৳{{ d.sales_today|floatformat:2 }}</div>
+                <div class="sub-text"><i class="fas fa-receipt"></i> From {{ d.orders_today }} orders</div>
+            </div>
+            <div class="stat-card dark">
+                <i class="fas fa-truck-loading icon-bg"></i>
+                <h3>Pending Shifts</h3>
+                <div class="value">{{ d.pending_orders_count }}</div>
+                <div class="sub-text"><i class="fas fa-clock"></i> Action required</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MIDDLE ROW: Top Trending + Categories -->
+    <div class="middle-row">
+        <div class="dash-panel">
+            <h2><i class="fas fa-crown" style="color:#f1c40f;"></i> Top Trending</h2>
+            <ul class="best-sellers-list">
+                {% for p in d.best_sellers %}
+                <li>
+                    <div class="bs-info">
+                        <div class="bs-rank {% if forloop.counter <= 3 %}rank-{{ forloop.counter }}{% endif %}">{{ forloop.counter }}</div>
+                        <div class="bs-name" title="{{ p.name }}">{{ p.name }}</div>
+                    </div>
+                    <div class="bs-sales">{{ p.total_sold }}</div>
+                </li>
+                {% empty %}
+                <li><span style="color:#aaa;">No trends yet.</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="dash-panel">
+            <h2><i class="fas fa-folder-open" style="color:#9b59b6;"></i> Categories</h2>
+            <ul class="best-sellers-list">
+                {% for c in d.top_categories %}
+                <li>
+                    <div class="bs-info">
+                        <div class="bs-name">{{ c.name }}</div>
+                    </div>
+                    <div class="bs-sales" style="background:#9b59b6;">{{ c.product_count }} items</div>
+                </li>
+                {% empty %}
+                <li><span style="color:#aaa;">No data.</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- BOTTOM ROW: Recent Transactions (full width) -->
+    <div class="bottom-row">
+        <div class="dash-panel">
+            <h2><i class="fas fa-history" style="color:#3498db;"></i> Recent Transactions</h2>
+            <table class="orders-mini-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in d.latest_orders %}
+                    <tr>
+                        <td style="font-weight:700; color:#3498db;">#{{ order.id }}</td>
+                        <td>{{ order.user.username }}</td>
+                        <td style="font-weight:600;">৳{{ order.final_total }}</td>
+                        <td><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                        <td style="color:#95a5a6;">{{ order.created_at|date:"M d, H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align:center; color:#aaa; padding:20px;">No orders yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var ctx = document.getElementById('salesChart');
+    if (ctx) {
+        ctx = ctx.getContext('2d');
+        var chartLabels = {{ d.chart_labels|safe }};
+        var chartData = {{ d.chart_data|safe }};
+        
+        var gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(52, 152, 219, 0.45)');
+        gradient.addColorStop(1, 'rgba(52, 152, 219, 0.01)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Revenue (৳)',
+                    data: chartData,
+                    backgroundColor: gradient,
+                    borderColor: '#3498db',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#3498db',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [5, 5], color: '#f1f2f6' },
+                        ticks: {
+                            callback: function(value) { return '৳' + value; },
+                            font: { family: "'Segoe UI', sans-serif" },
+                            color: '#7f8c8d'
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "'Segoe UI', sans-serif" }, color: '#7f8c8d' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#2c3e50',
+                        titleFont: { size: 13, family: "'Segoe UI', sans-serif" },
+                        bodyFont: { size: 13, family: "'Segoe UI', sans-serif", weight: 'bold' },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) { return 'Revenue: ৳' + context.parsed.y; }
+                        }
+                    }
+                },
+                interaction: { intersect: false, mode: 'index' },
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -4,12 +4,17 @@
 {% block content %}
 <!-- ========== HERO ========== -->
 <!-- ========== DYNAMIC SLIDER ========== -->
-{% if sliders %}
+{% if sliders or cms_banners %}
 <section class="hero-slider-wrap">
     <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
         <div class="carousel-indicators">
             {% for slider in sliders %}
             <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
+            {% endfor %}
+            {% for banner in cms_banners %}
+            {% with offset=sliders.count %}
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0|add:offset }}" {% if not sliders and forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter|add:offset }}"></button>
+            {% endwith %}
             {% endfor %}
         </div>
         <div class="carousel-inner">
@@ -24,6 +29,23 @@
                         <p class="lead">{{ slider.subtitle }}</p>
                         <div class="hero-actions mt-4">
                             <a href="{{ slider.link_url }}" class="btn-shop">Shop Now <i
+                                    class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% for banner in cms_banners %}
+            <div class="carousel-item {% if not sliders and forloop.first %}active{% endif %}" data-bs-interval="5000">
+                <div class="slider-img"
+                    style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{{ banner.image.url }}'); background-size: cover; background-position: center;">
+                </div>
+                <div class="container h-100">
+                    <div class="carousel-caption text-start">
+                        <h1>{{ banner.title }}</h1>
+                        <p class="lead">{{ banner.subtitle }}</p>
+                        <div class="hero-actions mt-4">
+                            <a href="{{ banner.link_url }}" class="btn-shop">{{ banner.button_text }} <i
                                     class="fas fa-arrow-right"></i></a>
                         </div>
                     </div>

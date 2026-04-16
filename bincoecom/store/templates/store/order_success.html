@@ -44,6 +44,9 @@
 
         <div class="success-actions mt-4">
             <a href="{% url 'order_detail' order.id %}" class="btn-checkout">View Order</a>
+            <a href="{% url 'generate_invoice' order.id %}" class="btn btn-outline-primary px-4 ms-3" style="border-radius: 10px; height: 50px; display: inline-flex; align-items: center;">
+                <i class="fas fa-file-pdf me-2"></i> Download Invoice
+            </a>
             <a href="{% url 'home' %}" class="btn-continue ms-3">Continue Shopping</a>
         </div>
     </div>

@@ -12,7 +12,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-kht%m#0a5_a1x8v$0=&uv
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['bincoecom.stradigtech.com', 'www.bincoecom.stradigtech.com', 'localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
 
@@ -27,6 +27,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'store',
     'accounts',
+    'cms',
+    'reports',
+    'siteconfig',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -55,6 +59,8 @@ TEMPLATES = [
                 'store.context_processors.cart_count',
                 'store.context_processors.categories',
                 'store.context_processors.shipping_config',
+                'siteconfig.context_processors.site_settings',
+                'notifications.context_processors.notification_context',
             ],
         },
     },
@@ -112,9 +118,33 @@ JET_SIDE_MENU_ITEMS = [
         {'name': 'store.category', 'label': 'Categories'},
         {'name': 'store.order', 'label': 'Orders'},
         {'name': 'store.orderitem', 'label': 'Order Items'},
+        {'name': 'store.shippingconfig', 'label': 'Shipping Settings'},
     ]},
     {'label': 'Accounts', 'items': [
         {'name': 'auth.user', 'label': 'Users'},
         {'name': 'auth.group', 'label': 'Groups'},
+    ]},
+    {'label': 'CMS', 'items': [
+        {'name': 'cms.homeslider', 'label': 'Homepage Sliders'},
+        {'name': 'cms.promotioncard', 'label': 'Promotion Cards'},
+        {'name': 'cms.banner', 'label': 'Banners'},
+        {'name': 'cms.article', 'label': 'Blog Articles'},
+        {'name': 'cms.staticpage', 'label': 'Static Pages'},
+    ]},
+    {'label': 'Reports & Analytics', 'items': [
+        {'url': '/admin/reports/', 'label': 'Analytics Dashboard'},
+        {'name': 'reports.expense', 'label': 'Expense Tracking'},
+    ]},
+    {'label': 'Settings & Configuration', 'items': [
+        {'name': 'siteconfig.generalsettings', 'label': 'General Settings'},
+        {'name': 'siteconfig.currencytaxsettings', 'label': 'Currency & Tax'},
+        {'name': 'siteconfig.paymentgatewaysettings', 'label': 'Payment Gateways'},
+        {'name': 'siteconfig.emailsettings', 'label': 'Email Configuration'},
+        {'name': 'siteconfig.smssettings', 'label': 'SMS Configuration'},
+    ]},
+    {'label': 'Notifications', 'items': [
+        {'name': 'notifications.notification', 'label': 'Notification Log'},
+        {'name': 'notifications.notificationtemplate', 'label': 'Templates'},
+        {'name': 'notifications.pushsubscription', 'label': 'Push Subscriptions'},
     ]},
 ]

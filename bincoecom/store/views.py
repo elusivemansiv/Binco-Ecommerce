@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q, Sum, Count, F
@@ -8,8 +10,9 @@ from datetime import timedelta
 from .models import (
     Product, Category, Cart, CartItem, Order, OrderItem,
     Wishlist, Coupon, ProductReview, ProductImage,
-    HomeSlider, PromotionCard, ProductVariation, Color, Size, ShippingConfig
+    ProductVariation, Color, Size, ShippingConfig
 )
+from cms.models import Banner as CMSBanner, HomeSlider, PromotionCard
 
 
 # ─────────────────────────── HOME ────────────────────────────
@@ -20,6 +23,7 @@ def home(request):
     trending = Product.objects.filter(is_active=True).order_by('-created_at')[:8]
     sliders = HomeSlider.objects.filter(is_active=True)
     promotions = PromotionCard.objects.filter(is_active=True)
+    cms_banners = CMSBanner.objects.filter(is_active=True)
 
     context = {
         'all_categories': all_categories,
@@ -28,6 +32,7 @@ def home(request):
         'trending': trending,
         'sliders': sliders,
         'promotions': promotions,
+        'cms_banners': cms_banners,
     }
     return render(request, 'store/home.html', context)
 
@@ -292,7 +297,7 @@ def apply_coupon(request):
             now = timezone.now()
             coupon = Coupon.objects.get(code=code, is_active=True, valid_from__lte=now, valid_to__gte=now)
             request.session['coupon_code'] = code
-            messages.success(request, f'Coupon "{code}" applied – {coupon.discount_percent}% off!')
+            messages.success(request, f'Coupon "{code}" applied ৳{coupon.discount_percent}% off!')
         except Coupon.DoesNotExist:
             messages.error(request, 'Invalid or expired coupon code.')
     return redirect('cart')
@@ -377,6 +382,7 @@ def checkout(request):
             postal_code=postal_code,
             total_price=cart.total,
             discount_amount=discount_amount,
+            shipping_charge=shipping_charge,
             payment_method=payment_method,
         )
         for item in items:
@@ -409,6 +415,15 @@ def checkout(request):
             coupon_obj.save()
         items.delete()
         request.session.pop('coupon_code', None)
+
+        # Fire order placed notification
+        try:
+            from notifications.services import NotificationService
+            NotificationService.notify_order_placed(order)
+            NotificationService.notify_seller_new_order(order)
+        except Exception:
+            pass
+
         messages.success(request, 'Order placed successfully!')
         return redirect('order_success', order_id=order.id)
 
@@ -747,3 +762,30 @@ def ajax_add_size(request):
             size, created = Size.objects.get_or_create(name__iexact=name, defaults={'name': name})
             return JsonResponse({'status': 'success', 'id': size.id, 'name': size.name})
     return JsonResponse({'status': 'error', 'message': 'Invalid data'})
+@login_required(login_url='login')
+def generate_invoice(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    
+    # Check permissions: User must own the order or be a superuser
+    if not (request.user == order.user or request.user.is_superuser):
+        messages.error(request, "You don't have permission to view this invoice.")
+        return redirect('home')
+
+    template_path = 'store/invoice_pdf.html'
+    context = {'order': order}
+    
+    # Create a Django response object, and specify content_type as pdf
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
+    
+    # Find the template and render it.
+    template = get_template(template_path)
+    html = template.render(context)
+
+    # Create the PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    
+    # If error then show error page
+    if pisa_status.err:
+       return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response

@@ -2,21 +2,12 @@ from django.contrib import admin
 from .models import (
     Category, Product, ProductImage, ProductReview,
     Cart, CartItem, Coupon, Order, OrderItem, Wishlist,
-    Color, Size, ProductVariation, HomeSlider, PromotionCard,
+    Color, Size, ProductVariation,
     ShippingConfig
 )
 
 
-@admin.register(HomeSlider)
-class HomeSliderAdmin(admin.ModelAdmin):
-    list_display = ('title', 'order', 'is_active', 'created_at')
-    list_editable = ('order', 'is_active')
 
-
-@admin.register(PromotionCard)
-class PromotionCardAdmin(admin.ModelAdmin):
-    list_display = ('title', 'order', 'is_active', 'created_at')
-    list_editable = ('order', 'is_active')
 
 
 @admin.register(Category)
@@ -93,6 +84,17 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'full_name', 'email')
     list_editable = ('status',)
     inlines = [OrderItemInline]
+    actions = ['download_invoice']
+
+    def download_invoice(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Please select exactly one order to download the invoice.", level='warning')
+            return
+        order = queryset.first()
+        from django.shortcuts import redirect
+        return redirect('generate_invoice', order_id=order.id)
+    
+    download_invoice.short_description = "Download PDF Invoice"
 
 
 @admin.register(Wishlist)

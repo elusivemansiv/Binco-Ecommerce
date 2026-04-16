@@ -213,13 +213,22 @@ class Order(models.Model):
     address = models.TextField()
     city = models.CharField(max_length=100)
     postal_code = models.CharField(max_length=20)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Total price of items before discount and shipping")
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='cod')
     return_reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def get_items_total(self):
+        return sum(item.subtotal for item in self.items.all())
+
+    @property
+    def get_final_total(self):
+        return self.total_price - self.discount_amount + self.shipping_charge
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -265,6 +274,15 @@ class Order(models.Model):
                             item.product.save(update_fields=['stock'])
                         
         super().save(*args, **kwargs)
+
+        # Fire notification on status change
+        if self.pk and self.status != self._original_status:
+            try:
+                from notifications.services import NotificationService
+                NotificationService.notify_order_status_change(self)
+            except Exception:
+                pass  # Don't let notification failure break order saving
+
         self._original_status = self.status
 
     def __str__(self):
@@ -306,22 +324,6 @@ class Wishlist(models.Model):
         return f"Wishlist of {self.user.username}"
 
 
-class HomeSlider(models.Model):
-    title = models.CharField(max_length=200)
-    subtitle = models.CharField(max_length=500, blank=True)
-    image = models.ImageField(upload_to='sliders/')
-    link_url = models.CharField(max_length=500, default='/')
-    order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['order', '-created_at']
-
-    def __str__(self):
-        return self.title
-
-
 class ShippingConfig(models.Model):
     shipping_charge = models.DecimalField(max_digits=10, decimal_places=2, default=50.00)
     free_shipping_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=999.00)
@@ -345,20 +347,3 @@ class ShippingConfig(models.Model):
 
     def __str__(self):
         return f"Shipping: ৳{self.shipping_charge} | Free over: ৳{self.free_shipping_threshold}"
-
-
-class PromotionCard(models.Model):
-    title = models.CharField(max_length=200)
-    subtitle = models.CharField(max_length=500, blank=True)
-    image = models.ImageField(upload_to='promotions/')
-    link_url = models.CharField(max_length=500, default='/')
-    badge_text = models.CharField(max_length=50, blank=True, help_text="e.g. NEW, -20%, HOT")
-    order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['order', '-created_at']
-
-    def __str__(self):
-        return self.title

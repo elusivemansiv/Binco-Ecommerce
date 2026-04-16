@@ -3,8 +3,41 @@
 
 {% block content %}
 <div class="container mt-4 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-7">
+    <div class="dashboard-grid">
+        <!-- Sidebar -->
+        <div class="dash-sidebar">
+            <div class="dash-user-card">
+                {% if request.user.profile.profile_pic %}
+                <img src="{{ request.user.profile.profile_pic.url }}" class="dash-avatar" alt="">
+                {% else %}
+                <div class="dash-avatar-placeholder">{{ request.user.username|first|upper }}</div>
+                {% endif %}
+                <h4 class="mb-1">{{ request.user.get_full_name|default:request.user.username }}</h4>
+                <div class="d-flex justify-content-center align-items-center gap-2">
+                    <span class="text-muted small">{{ request.user.email }}</span>
+                    {% if request.user.profile.is_seller %}
+                    <span class="seller-badge"><i class="fas fa-store me-1"></i>Seller</span>
+                    {% endif %}
+                </div>
+            </div>
+            <nav class="dash-nav">
+                <a href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt"></i>Dashboard</a>
+                <a href="{% url 'order_history' %}"><i class="fas fa-box"></i>My Orders</a>
+                <a href="{% url 'wishlist' %}"><i class="fas fa-heart"></i>Wishlist</a>
+                <a href="{% url 'profile_edit' %}" class="active"><i class="fas fa-user-edit"></i>Edit Profile</a>
+                {% if request.user.profile.is_seller %}
+                <a href="{% url 'seller_dashboard' %}"><i class="fas fa-store"></i>Seller Dashboard</a>
+                {% elif request.user.profile.is_seller_pending %}
+                <span class="dash-nav-item text-warning ps-3 py-2 d-block"><i class="fas fa-clock me-2"></i>Seller Approval Pending</span>
+                {% else %}
+                <a href="{% url 'become_seller' %}"><i class="fas fa-handshake"></i>Become a Seller</a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="logout-link"><i class="fas fa-sign-out-alt"></i>Logout</a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="dash-main">
             <div class="checkout-card">
                 <h3><i class="fas fa-user-edit me-2"></i>Edit Profile</h3>
                 <form method="POST" enctype="multipart/form-data">

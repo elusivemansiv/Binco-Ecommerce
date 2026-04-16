@@ -1,0 +1,226 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Reports & Analytics Dashboard – Binco{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .kpi-card {
+        border: none;
+        border-radius: 16px;
+        transition: transform 0.3s ease;
+        background: #fff;
+    }
+    .kpi-card:hover { transform: translateY(-5px); }
+    .kpi-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .chart-container {
+        background: #fff;
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .table-card {
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .btn-export {
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .btn-export:hover { transform: scale(1.02); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5 px-lg-5" style="background: #f8f9fa; min-height: 100vh;">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="fw-800 mb-1">Reports & Analytics</h1>
+            <p class="text-muted">Overview of your business performance for the last {{ days }} days.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle rounded-pill px-4" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-calendar-alt me-2"></i> Last {{ days }} Days
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-menu-item dropdown-item" href="?days=7">Last 7 Days</a></li>
+                    <li><a class="dropdown-menu-item dropdown-item" href="?days=30">Last 30 Days</a></li>
+                    <li><a class="dropdown-menu-item dropdown-item" href="?days=90">Last 90 Days</a></li>
+                    <li><a class="dropdown-menu-item dropdown-item" href="?days=365">Last Year</a></li>
+                </ul>
+            </div>
+            <a href="{% url 'export_sales_excel' %}" class="btn btn-success btn-export">
+                <i class="fas fa-file-excel me-2"></i> Export Excel
+            </a>
+            <a href="{% url 'export_sales_csv' %}" class="btn btn-primary btn-export">
+                <i class="fas fa-file-csv me-2"></i> Export CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="kpi-card p-4 shadow-sm h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="kpi-icon bg-primary-light text-primary">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <span class="text-success small fw-bold">+12.5%</span>
+                </div>
+                <h6 class="text-muted mb-1 text-uppercase small ls-1">Total Revenue</h6>
+                <h2 class="fw-800 mb-0">৳{{ total_revenue|floatformat:2 }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card p-4 shadow-sm h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="kpi-icon bg-success-light text-success">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                </div>
+                <h6 class="text-muted mb-1 text-uppercase small ls-1">Total Orders</h6>
+                <h2 class="fw-800 mb-0">{{ total_orders_count }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card p-4 shadow-sm h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="kpi-icon bg-warning-light text-warning">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+                <h6 class="text-muted mb-1 text-uppercase small ls-1">Total Expenses</h6>
+                <h2 class="fw-800 mb-0 text-danger">৳{{ total_expenses|floatformat:2 }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card p-4 shadow-sm h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="kpi-icon bg-info-light text-info">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <h6 class="text-muted mb-1 text-uppercase small ls-1">Net Profit</h6>
+                <h2 class="fw-800 mb-0 {% if net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    ৳{{ net_profit|floatformat:2 }}
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="chart-container h-100">
+                <h5 class="fw-700 mb-4">Order Status Distribution</h5>
+                <canvas id="salesChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="chart-container h-100">
+                <h5 class="fw-700 mb-4">Revenue vs Expenses</h5>
+                <canvas id="financeChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Performance Table -->
+    <div class="table-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-700 mb-0">Top Performing Products</h5>
+            <button class="btn btn-sm btn-light rounded-pill px-3">View Full Report</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product Name</th>
+                        <th class="text-center">Units Sold</th>
+                        <th class="text-end">Revenue Generated</th>
+                        <th class="text-end">Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in top_products %}
+                    <tr>
+                        <td class="fw-600">{{ item.product__name }}</td>
+                        <td class="text-center">{{ item.total_qty }}</td>
+                        <td class="text-end fw-bold">৳{{ item.total_rev|floatformat:2 }}</td>
+                        <td class="text-end">
+                            <div class="progress" style="height: 6px; width: 100px; margin-left: auto;">
+                                <div class="progress-bar bg-primary" style="width: 75%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center py-4">No sales data available for this period.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Sales Distribution Chart ---
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    const salesData = {
+        labels: [{% for item in sales_by_status %}'{{ item.status|title }}',{% endfor %}],
+        datasets: [{
+            label: 'Orders',
+            data: [{% for item in sales_by_status %}{{ item.count }},{% endfor %}],
+            backgroundColor: [
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(255, 206, 86, 0.7)',
+                'rgba(153, 102, 255, 0.7)'
+            ],
+            borderRadius: 8,
+        }]
+    };
+    new Chart(salesCtx, {
+        type: 'bar',
+        data: salesData,
+        options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // --- Finance Doughnut Chart ---
+    const financeCtx = document.getElementById('financeChart').getContext('2d');
+    new Chart(financeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Revenue', 'Expenses'],
+            datasets: [{
+                data: [{{ total_revenue }}, {{ total_expenses }}],
+                backgroundColor: ['#28a745', '#dc3545'],
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            cutout: '70%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+</script>
+{% endblock %}

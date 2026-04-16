@@ -1,0 +1,185 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block title %}Notifications – Binco{% endblock %}
+
+{% block extra_head %}
+<style>
+    .notif-page { padding: 60px 0; min-height: 60vh; }
+    .notif-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 30px;
+    }
+    .notif-header h1 {
+        font-size: 1.8rem; font-weight: 700; color: var(--text);
+        display: flex; align-items: center; gap: 12px;
+    }
+    .notif-header h1 .badge {
+        background: var(--primary);
+        color: #fff; font-size: 0.75rem; font-weight: 600;
+        padding: 4px 10px; border-radius: 20px;
+    }
+    .btn-mark-all {
+        background: transparent; border: 1.5px solid var(--primary);
+        color: var(--primary); padding: 8px 20px; border-radius: 8px;
+        font-weight: 600; font-size: 0.85rem; cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-mark-all:hover {
+        background: var(--primary); color: #fff;
+    }
+
+    .notif-list { display: flex; flex-direction: column; gap: 8px; }
+    .notif-card {
+        display: flex; align-items: flex-start; gap: 16px;
+        padding: 18px 20px; border-radius: 12px;
+        background: #fff; border: 1px solid #eee;
+        transition: all 0.2s; cursor: pointer;
+        text-decoration: none; color: inherit;
+    }
+    .notif-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        border-color: var(--primary);
+        transform: translateX(4px);
+    }
+    .notif-card.unread {
+        background: linear-gradient(135deg, #f0f4ff 0%, #fff 100%);
+        border-left: 4px solid var(--primary);
+    }
+    .notif-icon {
+        width: 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; flex-shrink: 0;
+    }
+    .notif-icon.order_confirmation { background: #e8f5e9; color: #2e7d32; }
+    .notif-icon.order_status { background: #e3f2fd; color: #1565c0; }
+    .notif-icon.shipping_update { background: #fff3e0; color: #e65100; }
+    .notif-icon.delivery_confirmation { background: #e8f5e9; color: #1b5e20; }
+    .notif-icon.return_update { background: #fce4ec; color: #c62828; }
+    .notif-icon.promotion { background: #f3e5f5; color: #6a1b9a; }
+    .notif-icon.welcome { background: #e0f7fa; color: #00695c; }
+    .notif-icon.system { background: #eceff1; color: #37474f; }
+
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-body h4 {
+        font-size: 0.95rem; font-weight: 600; color: var(--text);
+        margin-bottom: 4px; line-height: 1.4;
+    }
+    .notif-body p {
+        font-size: 0.85rem; color: var(--text-light);
+        margin: 0; line-height: 1.5;
+        display: -webkit-box; -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .notif-time {
+        font-size: 0.75rem; color: var(--text-light);
+        white-space: nowrap; flex-shrink: 0;
+        margin-top: 2px;
+    }
+    .notif-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--primary); flex-shrink: 0;
+        margin-top: 8px;
+    }
+
+    .empty-notif {
+        text-align: center; padding: 80px 20px;
+        color: var(--text-light);
+    }
+    .empty-notif i { font-size: 3rem; margin-bottom: 16px; opacity: 0.3; }
+    .empty-notif h3 { font-weight: 600; margin-bottom: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="notif-page">
+    <div class="container">
+        <div class="notif-header">
+            <h1>
+                <i class="fas fa-bell"></i> Notifications
+                {% if unread_count > 0 %}
+                    <span class="badge">{{ unread_count }} new</span>
+                {% endif %}
+            </h1>
+            {% if notifications %}
+                <button class="btn-mark-all" id="markAllReadBtn" onclick="markAllRead()">
+                    <i class="fas fa-check-double"></i> Mark all as read
+                </button>
+            {% endif %}
+        </div>
+
+        {% if notifications %}
+        <div class="notif-list" id="notifList">
+            {% for notif in notifications %}
+            <a href="{{ notif.link|default:'#' }}"
+               class="notif-card {% if not notif.is_read %}unread{% endif %}"
+               data-id="{{ notif.id }}"
+               onclick="markRead(event, {{ notif.id }}, '{{ notif.link }}')">
+                <div class="notif-icon {{ notif.notification_type }}">
+                    <i class="fas {{ notif.icon }}"></i>
+                </div>
+                <div class="notif-body">
+                    <h4>{{ notif.title }}</h4>
+                    <p>{{ notif.message|truncatewords:25 }}</p>
+                </div>
+                <span class="notif-time">{{ notif.created_at|timesince }} ago</span>
+                {% if not notif.is_read %}
+                    <div class="notif-dot"></div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-notif">
+            <i class="fas fa-bell-slash"></i>
+            <h3>No Notifications Yet</h3>
+            <p>You're all caught up! Notifications will appear here when there's an update.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markRead(e, notifId, link) {
+    e.preventDefault();
+    fetch(`/notifications/${notifId}/read/`, {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const card = document.querySelector(`.notif-card[data-id="${notifId}"]`);
+        if (card) {
+            card.classList.remove('unread');
+            const dot = card.querySelector('.notif-dot');
+            if (dot) dot.remove();
+        }
+        if (link && link !== '#') {
+            window.location.href = link;
+        }
+    });
+}
+
+function markAllRead() {
+    fetch('/notifications/mark-all-read/', {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(() => {
+        document.querySelectorAll('.notif-card.unread').forEach(card => {
+            card.classList.remove('unread');
+            const dot = card.querySelector('.notif-dot');
+            if (dot) dot.remove();
+        });
+        const badge = document.querySelector('.notif-header .badge');
+        if (badge) badge.remove();
+        // Update navbar badge
+        const navBadge = document.querySelector('.notif-badge');
+        if (navBadge) navBadge.remove();
+    });
+}
+</script>
+{% endblock %}

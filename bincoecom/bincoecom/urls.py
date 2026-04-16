@@ -24,6 +24,9 @@ urlpatterns = [
     path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),  # Dashboard
     path('admin/', admin.site.urls),
     path('', include('store.urls')),
+    path('', include('cms.urls')),
+    path('', include('reports.urls')),
+    path('', include('notifications.urls')),
     path('accounts/', include('accounts.urls')),
 ]
 
