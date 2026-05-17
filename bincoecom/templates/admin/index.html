@@ -9,212 +9,587 @@
 {{ block.super }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-    .custom-dash-container { 
-        padding: 30px 36px; 
-        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; 
-        background-color: #f0f2f5; 
+    /* ── FORCE FULL WIDTH ── */
+    #content { max-width: 100% !important; }
+    #content-main { max-width: 100% !important; }
+    .colMS { margin: 0 !important; }
+    #content-related, #changelist-filter { display: none !important; }
+
+    /* ── RESET & BASE ── */
+    .custom-dash-container {
+        padding: 28px 32px;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
         min-height: 100vh;
         width: 100%;
         box-sizing: border-box;
     }
+    .custom-dash-container * { box-sizing: border-box; }
 
-    .dash-header { margin-bottom: 24px; }
-    .dash-header h1 { font-size: 26px; font-weight: 800; color: #1a1a2e; margin: 0; display: flex; align-items: center; gap: 10px; }
-    .dash-header h1 i { color: #3498db; }
-
-    /* ── TOP ROW: Chart LEFT + Cards RIGHT ── */
-    .top-row {
-        display: grid;
-        grid-template-columns: 1fr 420px;
-        gap: 24px;
-        margin-bottom: 24px;
-    }
-    @media (max-width: 1300px) { .top-row { grid-template-columns: 1fr; } }
-
-    .chart-panel {
-        background: #fff;
-        border-radius: 18px;
-        padding: 28px;
-        border: 1px solid rgba(0,0,0,0.05);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    /* ── HEADER ── */
+    .dash-header {
+        margin-bottom: 28px;
         display: flex;
-        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
     }
-    .chart-panel h2 { font-size: 16px; font-weight: 700; color: #2c3e50; margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; }
-    .chart-panel h2 i { color: #3498db; }
+    .dash-header-left h1 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 4px 0;
+    }
+    .dash-header-left p {
+        font-size: 13px;
+        color: #94a3b8;
+        margin: 0;
+        font-weight: 500;
+    }
+    .dash-header-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .header-date {
+        background: #fff;
+        border-radius: 12px;
+        padding: 10px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .header-date i { color: #6366f1; }
 
-    .stats-grid {
+    /* ── STAT CARDS ROW ── */
+    .stats-row {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
+        margin-bottom: 24px;
     }
+    @media (min-width: 1100px) { .stats-row { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 640px) { .stats-row { grid-template-columns: 1fr; } }
 
-    .stat-card { 
-        background: #fff; 
-        padding: 22px 20px; 
-        border-radius: 16px; 
-        border: 1px solid rgba(0,0,0,0.05);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-        position: relative; 
-        overflow: hidden; 
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    .stat-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 18px 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        border: 1px solid rgba(0,0,0,0.04);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        min-width: 0;
     }
-    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.1); }
-    .stat-card::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 5px; background: #3498db; border-radius: 2px 0 0 2px; }
-    .stat-card.green::before  { background: #2ecc71; }
-    .stat-card.orange::before { background: #f39c12; }
-    .stat-card.purple::before { background: #9b59b6; }
-    .stat-card.red::before    { background: #e74c3c; }
-    .stat-card.dark::before   { background: #34495e; }
-    .stat-card .icon-bg { position: absolute; right: -8px; bottom: -14px; font-size: 60px; color: rgba(0,0,0,0.03); transform: rotate(-15deg); }
-    .stat-card h3 { font-size: 11px; color: #8b95a5; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.8px; }
-    .stat-card .value { font-size: 28px; font-weight: 900; color: #1a1a2e; line-height: 1.1; }
-    .stat-card .sub-text { font-size: 11px; color: #95a5a6; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+    }
+    .stat-card .icon-wrap {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: #fff;
+        flex-shrink: 0;
+    }
+    .stat-card .icon-wrap.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .stat-card .icon-wrap.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .stat-card .icon-wrap.green  { background: linear-gradient(135deg, #10b981, #059669); }
+    .stat-card .icon-wrap.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .stat-card .icon-wrap.red    { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .stat-card .icon-wrap.teal   { background: linear-gradient(135deg, #14b8a6, #0d9488); }
 
-    /* ── MIDDLE ROW ── */
-    .middle-row {
+    .stat-info {
+        min-width: 0;
+        overflow: hidden;
+    }
+    .stat-info h3 {
+        font-size: 11px;
+        font-weight: 600;
+        color: #94a3b8;
+        margin: 0 0 4px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .stat-info .value {
+        font-size: 22px;
+        font-weight: 800;
+        color: #1e293b;
+        line-height: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .stat-info .sub {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 500;
+    }
+    .stat-info .sub .up { color: #10b981; }
+    .stat-info .sub .down { color: #ef4444; }
+
+    /* ── CHART SECTION ── */
+    .chart-section {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 24px;
         margin-bottom: 24px;
     }
-    @media (max-width: 900px) { .middle-row { grid-template-columns: 1fr; } }
-
-    .dash-panel {
+    .panel {
         background: #fff;
-        border-radius: 18px;
-        padding: 24px;
-        border: 1px solid rgba(0,0,0,0.05);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border-radius: 16px;
+        padding: 24px 28px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        border: 1px solid rgba(0,0,0,0.04);
     }
-    .dash-panel h2 { font-size: 15px; font-weight: 700; margin: 0 0 18px 0; padding-bottom: 12px; border-bottom: 1px solid #f1f2f6; color: #2c3e50; display: flex; align-items: center; gap: 8px; }
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+    .panel-header h2 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 2px 0;
+    }
+    .panel-header .panel-sub {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+    .panel-header .panel-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        color: #fff;
+    }
+    .revenue-big {
+        font-size: 32px;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 20px;
+    }
 
-    .best-sellers-list { list-style: none; padding: 0; margin: 0; }
-    .best-sellers-list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f8f9fa; }
-    .best-sellers-list li:last-child { border-bottom: none; padding-bottom: 0; }
-    .bs-info { display: flex; align-items: center; gap: 10px; }
-    .bs-rank { width: 26px; height: 26px; background: #f1f2f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: 700; color: #7f8c8d; }
-    .bs-rank.rank-1 { background: #fff9c4; color: #f39c12; }
-    .bs-rank.rank-2 { background: #f5f6fa; color: #a4b0be; }
-    .bs-rank.rank-3 { background: #fae1dd; color: #d35400; }
-    .bs-name { font-weight: 600; color: #2c3e50; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-    .bs-sales { color: #fff; font-weight: 600; background: #3498db; padding: 3px 10px; border-radius: 20px; font-size: 11px; white-space: nowrap; }
+    /* ── BOTTOM ROW: Products + Customers ── */
+    .bottom-row {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    @media (max-width: 1100px) { .bottom-row { grid-template-columns: 1fr; } }
 
-    /* ── BOTTOM ROW ── */
-    .bottom-row { margin-bottom: 24px; }
-    .orders-mini-table { width: 100%; border-collapse: collapse; }
-    .orders-mini-table th { text-align: left; font-size: 11px; text-transform: uppercase; color: #95a5a6; padding: 10px 8px; border-bottom: 2px solid #f1f2f6; letter-spacing: 0.5px; }
-    .orders-mini-table td { padding: 13px 8px; font-size: 13px; border-bottom: 1px solid #f8f9fa; color: #2c3e50; }
-    .status-badge { padding: 4px 9px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-    .status-pending    { background: #fff9db; color: #f59f00; }
-    .status-delivered  { background: #ebfbee; color: #37b24d; }
-    .status-shipped    { background: #e7f5ff; color: #1c7ed6; }
-    .status-processing { background: #f3f0ff; color: #7048e8; }
-    .status-cancelled  { background: #fff5f5; color: #e03131; }
+    /* ── TOP PRODUCTS TABLE ── */
+    .products-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .products-table th {
+        text-align: left;
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #94a3b8;
+        padding: 10px 12px;
+        border-bottom: 2px solid #f1f5f9;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+    }
+    .products-table td {
+        padding: 14px 12px;
+        font-size: 13px;
+        border-bottom: 1px solid #f8fafc;
+        color: #334155;
+        vertical-align: middle;
+    }
+    .products-table tr:hover { background: #f8fafc; }
+    .products-table tr:last-child td { border-bottom: none; }
+
+    .product-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .product-thumb {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 2px solid #f1f5f9;
+        flex-shrink: 0;
+    }
+    .product-thumb-placeholder {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    .product-name {
+        font-weight: 600;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+    .price-badge {
+        background: #fef3c7;
+        color: #d97706;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-block;
+    }
+    .earning-badge {
+        color: #10b981;
+        font-weight: 700;
+        font-size: 13px;
+    }
+    .rank-badge {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .rank-1 { background: #fef3c7; color: #d97706; }
+    .rank-2 { background: #e2e8f0; color: #64748b; }
+    .rank-3 { background: #fce7f3; color: #db2777; }
+    .rank-default { background: #f1f5f9; color: #94a3b8; }
+
+    /* ── CUSTOMERS PANEL ── */
+    .customer-chart-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+    }
+    .doughnut-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+    }
+    .doughnut-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    .doughnut-center .big-num {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+    .doughnut-center .label {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+    .customer-legend {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 100%;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+    }
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .legend-item .legend-val {
+        margin-left: auto;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+    /* ── RECENT ORDERS ── */
+    .orders-section { margin-bottom: 24px; }
+    .orders-mini-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .orders-mini-table th {
+        text-align: left;
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #94a3b8;
+        padding: 10px 12px;
+        border-bottom: 2px solid #f1f5f9;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+    }
+    .orders-mini-table td {
+        padding: 14px 12px;
+        font-size: 13px;
+        border-bottom: 1px solid #f8fafc;
+        color: #334155;
+    }
+    .orders-mini-table tr:hover { background: #f8fafc; }
+    .orders-mini-table tr:last-child td { border-bottom: none; }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: capitalize;
+        display: inline-block;
+    }
+    .status-pending    { background: #fef9c3; color: #ca8a04; }
+    .status-delivered  { background: #dcfce7; color: #16a34a; }
+    .status-shipped    { background: #dbeafe; color: #2563eb; }
+    .status-processing { background: #ede9fe; color: #7c3aed; }
+    .status-cancelled  { background: #fee2e2; color: #dc2626; }
+    .status-return_requested { background: #fef3c7; color: #d97706; }
+    .status-return_approved  { background: #e0e7ff; color: #4f46e5; }
+    .status-returned   { background: #f3e8ff; color: #9333ea; }
+
+    .order-id-link {
+        font-weight: 700;
+        color: #6366f1;
+        text-decoration: none;
+    }
+    .order-id-link:hover {
+        text-decoration: underline;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .stat-card { animation: fadeInUp 0.5s ease forwards; }
+    .stat-card:nth-child(1) { animation-delay: 0.05s; }
+    .stat-card:nth-child(2) { animation-delay: 0.1s; }
+    .stat-card:nth-child(3) { animation-delay: 0.15s; }
+    .stat-card:nth-child(4) { animation-delay: 0.2s; }
+    .panel { animation: fadeInUp 0.5s ease forwards; animation-delay: 0.25s; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="custom-dash-container">
     {% get_admin_dashboard_data as d %}
-    
+
+    <!-- ═══ HEADER ═══ -->
     <div class="dash-header">
-        <h1><i class="fas fa-chart-line"></i> Store Intelligence</h1>
+        <div class="dash-header-left">
+            <h1>Dashboard</h1>
+            <p>Detailed information about your store</p>
+        </div>
+        <div class="dash-header-right">
+            <div class="header-date">
+                <i class="fas fa-calendar-alt"></i>
+                <span id="current-date"></span>
+            </div>
+        </div>
     </div>
 
-    <!-- TOP ROW: Chart (left) + 6 Metric Cards (right) -->
-    <div class="top-row">
+    <!-- ═══ STAT CARDS ═══ -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="icon-wrap purple"><i class="fas fa-shopping-cart"></i></div>
+            <div class="stat-info">
+                <h3>Orders Completed</h3>
+                <div class="value">{{ d.total_orders }}</div>
+                <div class="sub"><span class="up"><i class="fas fa-arrow-up"></i></span> {{ d.recent_orders }} this month</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon-wrap blue"><i class="fas fa-wallet"></i></div>
+            <div class="stat-info">
+                <h3>Total Revenue</h3>
+                <div class="value">৳{{ d.total_revenue|floatformat:0 }}</div>
+                <div class="sub"><span class="up"><i class="fas fa-arrow-up"></i></span> ৳{{ d.recent_revenue|floatformat:0 }} this month</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon-wrap green"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+                <h3>Total Customers</h3>
+                <div class="value">{{ d.total_customers }}</div>
+                <div class="sub"><span class="up"><i class="fas fa-user-plus"></i></span> {{ d.new_customers }} new this month</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon-wrap orange"><i class="fas fa-fire"></i></div>
+            <div class="stat-info">
+                <h3>Total Sales Made</h3>
+                <div class="value">{{ d.total_sales_count }}</div>
+                <div class="sub"><i class="fas fa-clock" style="color:#94a3b8;"></i> {{ d.pending_orders_count }} pending</div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Revenue Chart — LEFT -->
-        <div class="chart-panel">
-            <h2><i class="fas fa-chart-area"></i> Revenue Trajectory (Last 7 Days)</h2>
-            <div style="position: relative; flex: 1; min-height: 280px;">
+    <!-- ═══ REVENUE CHART ═══ -->
+    <div class="chart-section">
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Revenue this week</h2>
+                    <div class="revenue-big">৳{{ d.total_revenue|floatformat:0 }}</div>
+                </div>
+                <div class="panel-icon" style="background:linear-gradient(135deg,#6366f1,#4f46e5);">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+            <div style="position: relative; height: 280px;">
                 <canvas id="salesChart"></canvas>
             </div>
         </div>
-
-        <!-- 6 Stat Cards — RIGHT (2 cols × 3 rows) -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <i class="fas fa-wallet icon-bg"></i>
-                <h3>Lifetime Revenue</h3>
-                <div class="value">৳{{ d.total_revenue|floatformat:2 }}</div>
-                <div class="sub-text"><i class="fas fa-arrow-up" style="color:#2ecc71;"></i> ৳{{ d.recent_revenue|floatformat:2 }} this month</div>
-            </div>
-            <div class="stat-card green">
-                <i class="fas fa-shopping-bag icon-bg"></i>
-                <h3>Total Orders</h3>
-                <div class="value">{{ d.total_orders }}</div>
-                <div class="sub-text"><i class="fas fa-calendar-alt"></i> {{ d.recent_orders }} last 30 days</div>
-            </div>
-            <div class="stat-card orange">
-                <i class="fas fa-box-open icon-bg"></i>
-                <h3>Catalog Items</h3>
-                <div class="value">{{ d.total_products }}</div>
-                <div class="sub-text"><i class="fas fa-check-circle"></i> Active products</div>
-            </div>
-            <div class="stat-card purple">
-                <i class="fas fa-users icon-bg"></i>
-                <h3>Happy Customers</h3>
-                <div class="value">{{ d.total_customers }}</div>
-                <div class="sub-text"><i class="fas fa-user-plus"></i> Verified profiles</div>
-            </div>
-            <div class="stat-card red">
-                <i class="fas fa-fire icon-bg"></i>
-                <h3>Sales Today</h3>
-                <div class="value">৳{{ d.sales_today|floatformat:2 }}</div>
-                <div class="sub-text"><i class="fas fa-receipt"></i> From {{ d.orders_today }} orders</div>
-            </div>
-            <div class="stat-card dark">
-                <i class="fas fa-truck-loading icon-bg"></i>
-                <h3>Pending Shifts</h3>
-                <div class="value">{{ d.pending_orders_count }}</div>
-                <div class="sub-text"><i class="fas fa-clock"></i> Action required</div>
-            </div>
-        </div>
     </div>
 
-    <!-- MIDDLE ROW: Top Trending + Categories -->
-    <div class="middle-row">
-        <div class="dash-panel">
-            <h2><i class="fas fa-crown" style="color:#f1c40f;"></i> Top Trending</h2>
-            <ul class="best-sellers-list">
-                {% for p in d.best_sellers %}
-                <li>
-                    <div class="bs-info">
-                        <div class="bs-rank {% if forloop.counter <= 3 %}rank-{{ forloop.counter }}{% endif %}">{{ forloop.counter }}</div>
-                        <div class="bs-name" title="{{ p.name }}">{{ p.name }}</div>
-                    </div>
-                    <div class="bs-sales">{{ p.total_sold }}</div>
-                </li>
-                {% empty %}
-                <li><span style="color:#aaa;">No trends yet.</span></li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <div class="dash-panel">
-            <h2><i class="fas fa-folder-open" style="color:#9b59b6;"></i> Categories</h2>
-            <ul class="best-sellers-list">
-                {% for c in d.top_categories %}
-                <li>
-                    <div class="bs-info">
-                        <div class="bs-name">{{ c.name }}</div>
-                    </div>
-                    <div class="bs-sales" style="background:#9b59b6;">{{ c.product_count }} items</div>
-                </li>
-                {% empty %}
-                <li><span style="color:#aaa;">No data.</span></li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-
-    <!-- BOTTOM ROW: Recent Transactions (full width) -->
+    <!-- ═══ BOTTOM ROW: Top Products + Customers ═══ -->
     <div class="bottom-row">
-        <div class="dash-panel">
-            <h2><i class="fas fa-history" style="color:#3498db;"></i> Recent Transactions</h2>
+        <!-- Top Products -->
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Top Products</h2>
+                    <p class="panel-sub">Best selling products in your store</p>
+                </div>
+                <div class="panel-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                    <i class="fas fa-crown"></i>
+                </div>
+            </div>
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Product Name</th>
+                        <th>Date Added</th>
+                        <th>Price</th>
+                        <th>Total Earning</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in d.best_sellers_data %}
+                    <tr>
+                        <td>
+                            <div class="rank-badge {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-default{% endif %}">
+                                {{ forloop.counter }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="product-cell">
+                                {% if p.image_url %}
+                                <img src="{{ p.image_url }}" class="product-thumb" alt="{{ p.name }}">
+                                {% else %}
+                                <div class="product-thumb-placeholder"><i class="fas fa-box"></i></div>
+                                {% endif %}
+                                <span class="product-name" title="{{ p.name }}">{{ p.name }}</span>
+                            </div>
+                        </td>
+                        <td style="color:#64748b; font-size:12px;">{{ p.created_at|date:"M d, Y" }}</td>
+                        <td><span class="price-badge">৳{{ p.price|floatformat:0 }}</span></td>
+                        <td><span class="earning-badge">৳{{ p.total_earning|floatformat:0 }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:30px;">No product sales yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Customers -->
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Customers</h2>
+                    <p class="panel-sub">Information about your store's customers</p>
+                </div>
+                <div class="panel-icon" style="background:linear-gradient(135deg,#10b981,#059669);">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+            </div>
+            <div class="customer-chart-wrap">
+                <div class="doughnut-container">
+                    <canvas id="customersChart"></canvas>
+                    <div class="doughnut-center">
+                        <div class="big-num">{{ d.total_customers }}</div>
+                        <div class="label">Total</div>
+                    </div>
+                </div>
+                <div class="customer-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background:#6366f1;"></span>
+                        New customers
+                        <span class="legend-val">{{ d.new_customers }}</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background:#f59e0b;"></span>
+                        Returning customers
+                        <span class="legend-val">{{ d.returning_customers }}</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background:#10b981;"></span>
+                        Total orders
+                        <span class="legend-val">{{ d.total_orders }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ RECENT TRANSACTIONS ═══ -->
+    <div class="orders-section">
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Recent Transactions</h2>
+                    <p class="panel-sub">Latest orders from your customers</p>
+                </div>
+                <div class="panel-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">
+                    <i class="fas fa-history"></i>
+                </div>
+            </div>
             <table class="orders-mini-table">
                 <thead>
                     <tr>
@@ -228,14 +603,14 @@
                 <tbody>
                     {% for order in d.latest_orders %}
                     <tr>
-                        <td style="font-weight:700; color:#3498db;">#{{ order.id }}</td>
-                        <td>{{ order.user.username }}</td>
-                        <td style="font-weight:600;">৳{{ order.final_total }}</td>
+                        <td><a href="/admin/store/order/{{ order.id }}/change/" class="order-id-link">#{{ order.id }}</a></td>
+                        <td style="font-weight:600;">{{ order.full_name }}</td>
+                        <td style="font-weight:700;">৳{{ order.final_total|floatformat:0 }}</td>
                         <td><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
-                        <td style="color:#95a5a6;">{{ order.created_at|date:"M d, H:i" }}</td>
+                        <td style="color:#94a3b8; font-size:12px;">{{ order.created_at|date:"M d, Y, h:i a" }}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" style="text-align:center; color:#aaa; padding:20px;">No orders yet.</td></tr>
+                    <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:30px;">No orders yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -245,15 +620,21 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    // Current date
+    var now = new Date();
+    var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+
+    // ── Revenue Chart ──
     var ctx = document.getElementById('salesChart');
     if (ctx) {
         ctx = ctx.getContext('2d');
         var chartLabels = {{ d.chart_labels|safe }};
         var chartData = {{ d.chart_data|safe }};
-        
-        var gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(52, 152, 219, 0.45)');
-        gradient.addColorStop(1, 'rgba(52, 152, 219, 0.01)');
+
+        var gradient = ctx.createLinearGradient(0, 0, 0, 280);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.35)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.01)');
 
         new Chart(ctx, {
             type: 'line',
@@ -263,13 +644,16 @@ document.addEventListener("DOMContentLoaded", function() {
                     label: 'Revenue (৳)',
                     data: chartData,
                     backgroundColor: gradient,
-                    borderColor: '#3498db',
+                    borderColor: '#6366f1',
                     borderWidth: 3,
                     pointBackgroundColor: '#fff',
-                    pointBorderColor: '#3498db',
-                    pointBorderWidth: 2,
+                    pointBorderColor: '#6366f1',
+                    pointBorderWidth: 2.5,
                     pointRadius: 5,
-                    pointHoverRadius: 7,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: '#6366f1',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 3,
                     fill: true,
                     tension: 0.4
                 }]
@@ -280,33 +664,71 @@ document.addEventListener("DOMContentLoaded", function() {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { borderDash: [5, 5], color: '#f1f2f6' },
+                        grid: { borderDash: [5, 5], color: '#f1f5f9' },
                         ticks: {
-                            callback: function(value) { return '৳' + value; },
-                            font: { family: "'Segoe UI', sans-serif" },
-                            color: '#7f8c8d'
-                        }
+                            callback: function(value) { return '৳' + value.toLocaleString(); },
+                            font: { family: "'Inter', sans-serif", size: 12 },
+                            color: '#94a3b8'
+                        },
+                        border: { display: false }
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { font: { family: "'Segoe UI', sans-serif" }, color: '#7f8c8d' }
+                        ticks: { font: { family: "'Inter', sans-serif", size: 12 }, color: '#94a3b8' },
+                        border: { display: false }
                     }
                 },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#2c3e50',
-                        titleFont: { size: 13, family: "'Segoe UI', sans-serif" },
-                        bodyFont: { size: 13, family: "'Segoe UI', sans-serif", weight: 'bold' },
-                        padding: 12,
-                        cornerRadius: 8,
+                        backgroundColor: '#1e293b',
+                        titleFont: { size: 13, family: "'Inter', sans-serif", weight: '600' },
+                        bodyFont: { size: 14, family: "'Inter', sans-serif", weight: '700' },
+                        padding: 14,
+                        cornerRadius: 10,
                         displayColors: false,
                         callbacks: {
-                            label: function(context) { return 'Revenue: ৳' + context.parsed.y; }
+                            label: function(context) { return 'Revenue: ৳' + context.parsed.y.toLocaleString(); }
                         }
                     }
                 },
                 interaction: { intersect: false, mode: 'index' },
+            }
+        });
+    }
+
+    // ── Customers Doughnut Chart ──
+    var dCtx = document.getElementById('customersChart');
+    if (dCtx) {
+        dCtx = dCtx.getContext('2d');
+        new Chart(dCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['New Customers', 'Returning Customers'],
+                datasets: [{
+                    data: [{{ d.new_customers }}, {{ d.returning_customers }}],
+                    backgroundColor: ['#6366f1', '#f59e0b'],
+                    borderWidth: 0,
+                    borderRadius: 6,
+                    spacing: 4,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '72%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleFont: { size: 13, family: "'Inter', sans-serif" },
+                        bodyFont: { size: 13, family: "'Inter', sans-serif", weight: '600' },
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: true,
+                    }
+                }
             }
         });
     }

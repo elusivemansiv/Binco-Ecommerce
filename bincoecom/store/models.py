@@ -304,6 +304,8 @@ class OrderItem(models.Model):
 
     @property
     def subtotal(self):
+        if self.price is None or self.quantity is None:
+            return 0
         return self.price * self.quantity
 
     @property

@@ -2,7 +2,8 @@ from django import template
 from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import timedelta
-from store.models import Order, Product, OrderItem
+from store.models import Order, Product, OrderItem, Category
+from django.contrib.auth.models import User
 import json
 
 register = template.Library()
@@ -21,7 +22,7 @@ def get_admin_dashboard_data():
     recent_revenue = sum(order.final_total for order in Order.objects.filter(status='delivered', created_at__gte=thirty_days_ago))
     
     total_products = Product.objects.count()
-    total_customers = Order.objects.values('user').distinct().count()
+    total_customers = User.objects.filter(is_staff=False).count()
     
     # Today's Sales
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -31,23 +32,48 @@ def get_admin_dashboard_data():
     # Pending Tasks
     pending_orders_count = Order.objects.filter(status='pending').count()
     
-    # Best Selling Products
+    # Total items sold
+    total_sales_count = OrderItem.objects.aggregate(total=Sum('quantity'))['total'] or 0
+    
+    # Best Selling Products (with image)
     best_sellers = Product.objects.annotate(
-        total_sold=Sum('orderitem__quantity')
+        total_sold=Sum('orderitem__quantity'),
+        total_earning=Sum('orderitem__price')
     ).filter(total_sold__gt=0).order_by('-total_sold')[:5]
     
+    # Build best sellers data with image URLs
+    best_sellers_data = []
+    for p in best_sellers:
+        img_url = p.image.url if p.image else ''
+        earning = 0
+        # Calculate actual earnings
+        items = OrderItem.objects.filter(product=p)
+        for item in items:
+            if item.price and item.quantity:
+                earning += item.price * item.quantity
+        best_sellers_data.append({
+            'name': p.name,
+            'image_url': img_url,
+            'price': float(p.price),
+            'created_at': p.created_at,
+            'total_sold': p.total_sold or 0,
+            'total_earning': float(earning),
+        })
+    
     # Category Distribution
-    from store.models import Category
     top_categories = Category.objects.annotate(
         product_count=Count('products'),
         total_sales=Sum('products__orderitem__quantity')
     ).filter(total_sales__gt=0).order_by('-total_sales')[:5]
     
+    # Customer analytics
+    new_customers = User.objects.filter(is_staff=False, date_joined__gte=thirty_days_ago).count()
+    returning_customers = total_customers - new_customers if total_customers > new_customers else 0
+    
     # Recent Orders
     latest_orders = Order.objects.all().order_by('-created_at')[:8]
     
     # Sales last 7 days for the graph
-    seven_days_ago = now - timedelta(days=7)
     labels = []
     data = []
     
@@ -70,9 +96,13 @@ def get_admin_dashboard_data():
         'sales_today': sales_today,
         'orders_today': orders_today,
         'pending_orders_count': pending_orders_count,
+        'total_sales_count': total_sales_count,
         'best_sellers': best_sellers,
+        'best_sellers_data': best_sellers_data,
         'top_categories': top_categories,
         'latest_orders': latest_orders,
+        'new_customers': new_customers,
+        'returning_customers': returning_customers,
         'chart_labels': json.dumps(labels),
         'chart_data': json.dumps(data),
     }

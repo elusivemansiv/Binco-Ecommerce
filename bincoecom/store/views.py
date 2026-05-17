@@ -1,7 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import get_template
-from xhtml2pdf import pisa
+try:
+    from xhtml2pdf import pisa
+    PDF_SUPPORT = True
+except ImportError:
+    pisa = None
+    PDF_SUPPORT = False
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
@@ -770,6 +775,10 @@ def generate_invoice(request, order_id):
     if not (request.user == order.user or request.user.is_superuser):
         messages.error(request, "You don't have permission to view this invoice.")
         return redirect('home')
+        
+    if not PDF_SUPPORT:
+        messages.warning(request, "PDF invoices are currently disabled on this server.")
+        return redirect('order_detail', order_id=order.id)
 
     template_path = 'store/invoice_pdf.html'
     context = {'order': order}
