@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Binco – Buy & Sell Everything{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Binco is Bangladesh's leading marketplace to buy and sell new and used items.{% endblock %}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Notification Dropdown */
+        .notif-bell-wrap { position: relative; }
+        .notif-dropdown {
+            position: absolute; top: calc(100% + 12px); right: -20px;
+            width: 360px; background: #fff; border-radius: 14px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+            border: 1px solid #eee; z-index: 3000;
+            overflow: hidden; animation: notifSlideIn 0.2s ease;
+        }
+        @keyframes notifSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notif-dropdown-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 18px; border-bottom: 1px solid #f0f0f0;
+        }
+        .notif-dropdown-header strong { font-size: 0.95rem; color: #1a1a2e; }
+        .notif-dropdown-header a {
+            font-size: 0.78rem; color: var(--primary, #4361ee);
+            text-decoration: none; font-weight: 600;
+        }
+        .notif-dropdown-body { max-height: 340px; overflow-y: auto; }
+        .notif-dropdown-item {
+            display: flex; gap: 12px; padding: 12px 18px;
+            border-bottom: 1px solid #f8f8f8; text-decoration: none;
+            color: inherit; transition: background 0.15s; cursor: pointer;
+        }
+        .notif-dropdown-item:hover { background: #f7f8fc; }
+        .notif-dropdown-item.unread { background: #f0f4ff; }
+        .notif-dropdown-item .nd-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: #e8f0fe; color: var(--primary, #4361ee);
+            font-size: 0.85rem; flex-shrink: 0;
+        }
+        .notif-dropdown-item .nd-content { flex: 1; min-width: 0; }
+        .notif-dropdown-item .nd-content h5 {
+            font-size: 0.82rem; font-weight: 600; margin: 0 0 2px;
+            color: #1a1a2e; line-height: 1.3;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .notif-dropdown-item .nd-content p {
+            font-size: 0.75rem; color: #888; margin: 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .notif-dropdown-item .nd-time {
+            font-size: 0.7rem; color: #aaa; white-space: nowrap;
+            margin-top: 2px;
+        }
+        .notif-dropdown-footer {
+            display: block; text-align: center; padding: 12px;
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--primary, #4361ee); text-decoration: none;
+            border-top: 1px solid #f0f0f0; background: #fafbff;
+        }
+        .notif-dropdown-footer:hover { background: #f0f4ff; }
+        .notif-dropdown-empty {
+            text-align: center; padding: 30px 20px;
+            color: #aaa; font-size: 0.85rem;
+        }
+        .notif-badge {
+            background: #ef4444 !important;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ========== TOP BAR ========== -->
+<div class="top-bar">
+    <div class="container d-flex justify-content-between align-items-center">
+        <span>🇧🇩 {% if shipping_conf.is_active %}Free shipping on orders over ৳{{ shipping_conf.free_shipping_threshold|floatformat:0 }}{% else %}Premium Shopping Experience{% endif %}</span>
+        <div class="d-flex gap-3">
+            {% if user.is_authenticated %}
+                <span>Hi, {{ user.first_name|default:user.username }}!</span>
+                {% if user.profile.is_seller %}
+                    <a href="{% url 'seller_dashboard' %}">Seller Dashboard</a>
+                {% elif user.profile.is_seller_pending %}
+                    <span class="text-warning"><i class="fas fa-clock"></i> Seller Approval Pending</span>
+                {% else %}
+                    <a href="{% url 'become_seller' %}">Become a Seller</a>
+                {% endif %}
+                <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Sign In</a>
+                <a href="{% url 'register' %}">Register</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ========== NAVBAR ========== -->
+<nav class="main-navbar">
+    <div class="container">
+        <div class="navbar-inner">
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-menu-toggle" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Logo -->
+            <a href="{% url 'home' %}" class="brand-logo">
+                <span class="logo-bi">Bin</span><span class="logo-nco">co</span>
+            </a>
+
+            <!-- Search Bar -->
+            <form class="search-bar" method="GET" action="{% url 'product_list' %}">
+                <input type="text" name="q" placeholder="Search for anything..." value="{{ request.GET.q }}" id="search-input">
+                <button type="submit"><i class="fas fa-search"></i></button>
+            </form>
+
+            <!-- Nav Actions -->
+            <div class="nav-actions">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="nav-action-btn">
+                        <i class="fas fa-user"></i>
+                        <span>Account</span>
+                    </a>
+                    <a href="{% url 'wishlist' %}" class="nav-action-btn">
+                        <i class="fas fa-heart"></i>
+                        <span>Wishlist</span>
+                    </a>
+                    <!-- Notification Bell -->
+                    <div class="nav-action-btn notif-bell-wrap" id="notifBellWrap" style="position:relative;cursor:pointer;" onclick="toggleNotifDropdown(event)">
+                        <div class="cart-icon-wrap">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notification_count > 0 %}
+                                <span class="cart-badge notif-badge">{{ unread_notification_count }}</span>
+                            {% endif %}
+                        </div>
+                        <span>Alerts</span>
+                        <!-- Notification Dropdown -->
+                        <div class="notif-dropdown" id="notifDropdown" style="display:none;">
+                            <div class="notif-dropdown-header">
+                                <strong>Notifications</strong>
+                                <a href="#" onclick="markAllReadNav(event)">Mark all read</a>
+                            </div>
+                            <div class="notif-dropdown-body" id="notifDropdownBody">
+                                <div class="notif-dropdown-empty">Loading...</div>
+                            </div>
+                            <a href="{% url 'notification_list' %}" class="notif-dropdown-footer">
+                                View All Notifications
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+                <a href="{% url 'cart' %}" class="nav-action-btn cart-btn">
+                    <div class="cart-icon-wrap">
+                        <i class="fas fa-shopping-cart"></i>
+                        {% if cart_count > 0 %}
+                            <span class="cart-badge">{{ cart_count }}</span>
+                        {% endif %}
+                    </div>
+                    <span>Cart</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ========== MOBILE SIDEBAR ========== -->
+<div class="mobile-sidebar-overlay" id="mobileOverlay"></div>
+<div class="mobile-sidebar" id="mobileSidebar">
+    <div class="sidebar-header">
+        <a href="{% url 'home' %}" class="brand-logo">
+            <span class="logo-bi">Bin</span><span class="logo-nco">co</span>
+        </a>
+        <button class="close-sidebar" id="closeSidebar">&times;</button>
+    </div>
+    <div class="sidebar-body">
+        <nav class="mobile-nav">
+            <a href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a>
+            <a href="{% url 'product_list' %}"><i class="fas fa-th-large"></i> Shop All</a>
+            
+            <div class="sidebar-divider">User Account</div>
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}"><i class="fas fa-user-circle"></i> Dashboard</a>
+                <a href="{% url 'wishlist' %}"><i class="fas fa-heart"></i> Wishlist</a>
+                <a href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> My Cart</a>
+                {% if request.user.profile.is_seller %}
+                    <a href="{% url 'seller_dashboard' %}"><i class="fas fa-store"></i> Seller Dashboard</a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="{% url 'register' %}"><i class="fas fa-user-plus"></i> Register</a>
+            {% endif %}
+            
+            <div class="sidebar-divider">Categories</div>
+            {% for cat in categories %}
+                <a href="{% url 'product_list' %}?category={{ cat.slug }}">{{ cat.name }}</a>
+            {% endfor %}
+        </nav>
+    </div>
+</div>
+
+<!-- ========== CATEGORY BAR ========== -->
+<div class="category-bar">
+    <div class="container">
+        <ul class="category-nav">
+            <li><a href="{% url 'product_list' %}" class="{% if not request.GET.category %}active{% endif %}">All</a></li>
+            {% for cat in all_categories %}
+            <li>
+                <a href="{% url 'product_list' %}?category={{ cat.slug }}"
+                   class="{% if request.GET.category == cat.slug %}active{% endif %}">
+                    {% if cat.icon %}<i class="{{ cat.icon }}"></i>{% endif %}
+                    {{ cat.name }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- ========== TOAST NOTIFICATIONS ========== -->
+<div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 2000;"></div>
+
+<!-- ========== MESSAGES ========== -->
+{% if messages %}
+<div class="container mt-3" id="django-messages">
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- ========== MAIN CONTENT ========== -->
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ========== FOOTER ========== -->
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo"><span class="logo-bi">Bin</span><span class="logo-nco">co</span></div>
+                <p>Bangladesh's trusted marketplace to buy and sell everything.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Shop</h4>
+                <ul>
+                    <li><a href="{% url 'product_list' %}">All Products</a></li>
+                    <li><a href="{% url 'product_list' %}?sort=price_asc">Best Deals</a></li>
+                    {% for cat in all_categories|slice:":5" %}
+                    <li><a href="{% url 'product_list' %}?category={{ cat.slug }}">{{ cat.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Account</h4>
+                <ul>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'dashboard' %}">My Dashboard</a></li>
+                    <li><a href="{% url 'order_history' %}">My Orders</a></li>
+                    <li><a href="{% url 'wishlist' %}">Wishlist</a></li>
+                    <li><a href="{% url 'profile_edit' %}">Edit Profile</a></li>
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                    {% else %}
+                    <li><a href="{% url 'login' %}">Sign In</a></li>
+                    <li><a href="{% url 'register' %}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Sell</h4>
+                <ul>
+                    {% if user.is_authenticated and user.profile.is_seller %}
+                    <li><a href="{% url 'seller_dashboard' %}">Seller Dashboard</a></li>
+                    <li><a href="{% url 'add_product' %}">List a Product</a></li>
+                    {% elif user.is_authenticated and user.profile.is_seller_pending %}
+                    <li><span class="text-warning"><i class="fas fa-clock"></i> Seller Approval Pending</span></li>
+                    {% else %}
+                    <li><a href="{% url 'become_seller' %}">Become a Seller</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="footer-col">
+    <h4>Company</h4>
+    <ul>
+        <li><a href="{% url 'article_list' %}">Our Blog</a></li>
+        <li><a href="{% url 'page_detail' 'about-us' %}">About Us</a></li>
+        <li><a href="{% url 'page_detail' 'contact' %}">Contact Us</a></li>
+        <li><a href="{% url 'page_detail' 'privacy-policy' %}">Privacy Policy</a></li>
+    </ul>
+    <h4>Help</h4>
+                <ul>
+                    <li><i class="fas fa-envelope me-1"></i> support@binco.com</li>
+                    <li><i class="fas fa-phone me-1"></i> +880 1700-000000</li>
+                </ul>
+</div>
+
+<div class="footer-col">
+                
+            </div>
+
+        </div> <div class="footer-bottom">
+            <p>&copy; 2026 Binco Ecommerce. All rights reserved.</p>
+            <p class="text-xs text-slate-500">Developed by <a class="hover:text-primary transition-colors" href="https://stradigtech.com/"> StradigTech </a> | <a class="hover:text-primary transition-colors" href="https://mansibahsan.netlify.app/">Mansib </a></p>
+            <div class="payment-badges">
+                <span>bKash</span><span>Nagad</span><span>Visa</span><span>MasterCard</span>
+            </div>
+        </div>
+
+    </div> </footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const id = 'toast-' + Date.now();
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const color = type === 'success' ? 'var(--success)' : 'var(--danger)';
+        
+        const toastHtml = `
+            <div id="${id}" class="toast show animate__animated animate__fadeInUp" role="alert" aria-live="assertive" aria-atomic="true" style="background: #fff; border-left: 5px solid ${color}; min-width: 250px; border-radius: 8px; box-shadow: var(--shadow-hover);">
+                <div class="toast-body d-flex align-items-center gap-2 p-3">
+                    <i class="fas ${icon}" style="color: ${color}; font-size: 1.2rem;"></i>
+                    <div class="flex-grow-1 fw-medium" style="color: var(--text); font-size: 14px;">${message}</div>
+                    <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        
+        const toastElement = document.getElementById(id);
+        setTimeout(() => {
+            if (toastElement) {
+                toastElement.classList.replace('animate__fadeInUp', 'animate__fadeOutDown');
+                setTimeout(() => toastElement.remove(), 500);
+            }
+        }, 4000);
+    }
+
+    function updateCartBadge(count) {
+        let badge = document.querySelector('.cart-badge');
+        if (count > 0) {
+            if (!badge) {
+                const iconWrap = document.querySelector('.cart-icon-wrap');
+                badge = document.createElement('span');
+                badge.className = 'cart-badge';
+                iconWrap.appendChild(badge);
+            }
+            badge.innerText = count;
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+
+    // Auto-hide Django alerts
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('#django-messages .alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
+
+    function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // ─── Notification Dropdown ───
+    let notifDropdownOpen = false;
+
+    function toggleNotifDropdown(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const dd = document.getElementById('notifDropdown');
+        if (!dd) return;
+
+        notifDropdownOpen = !notifDropdownOpen;
+        dd.style.display = notifDropdownOpen ? 'block' : 'none';
+
+        if (notifDropdownOpen) {
+            loadNotifDropdown();
+        }
+    }
+
+    function loadNotifDropdown() {
+        fetch('/notifications/dropdown/', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            const body = document.getElementById('notifDropdownBody');
+            if (!data.notifications || data.notifications.length === 0) {
+                body.innerHTML = '<div class="notif-dropdown-empty"><i class="fas fa-bell-slash"></i><br>No notifications yet</div>';
+                return;
+            }
+            let html = '';
+            data.notifications.forEach(n => {
+                const link = n.link || '/notifications/';
+                html += `
+                    <div class="notif-dropdown-item ${n.is_read ? '' : 'unread'}"
+                         onclick="window.location.href='${link}'">
+                        <div class="nd-icon"><i class="fas ${n.icon || 'fa-bell'}"></i></div>
+                        <div class="nd-content">
+                            <h5>${n.title}</h5>
+                            <p>${n.message}</p>
+                        </div>
+                        <span class="nd-time">${n.time_ago}</span>
+                    </div>`;
+            });
+            body.innerHTML = html;
+        })
+        .catch(() => {
+            document.getElementById('notifDropdownBody').innerHTML =
+                '<div class="notif-dropdown-empty">Failed to load</div>';
+        });
+    }
+
+    function markAllReadNav(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        fetch('/notifications/mark-all-read/', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(() => {
+            document.querySelectorAll('.notif-dropdown-item.unread').forEach(el => el.classList.remove('unread'));
+            const badge = document.querySelector('.notif-badge');
+            if (badge) badge.remove();
+        });
+    }
+
+    // Close dropdown on outside click
+    document.addEventListener('click', function(e) {
+        const wrap = document.getElementById('notifBellWrap');
+        const dd = document.getElementById('notifDropdown');
+        if (dd && wrap && !wrap.contains(e.target)) {
+            dd.style.display = 'none';
+            notifDropdownOpen = false;
+        }
+    });
+
+    // Poll notification count every 60s
+    setInterval(() => {
+        fetch('/notifications/count/', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            let badge = document.querySelector('.notif-badge');
+            if (data.count > 0) {
+                if (!badge) {
+                    const iconWrap = document.querySelector('.notif-bell-wrap .cart-icon-wrap');
+                    if (iconWrap) {
+                        badge = document.createElement('span');
+                        badge.className = 'cart-badge notif-badge';
+                        iconWrap.appendChild(badge);
+                    }
+                }
+                if (badge) badge.innerText = data.count;
+            } else if (badge) {
+                badge.remove();
+            }
+        }).catch(() => {});
+    }, 60000);
+
+    // Mobile Menu Toggle Logic
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const closeSidebar = document.getElementById('closeSidebar');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    if (mobileMenuBtn && mobileSidebar && mobileOverlay) {
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileSidebar.classList.add('active');
+            mobileOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        const hideSidebar = () => {
+            mobileSidebar.classList.remove('active');
+            mobileOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        closeSidebar.addEventListener('click', hideSidebar);
+        mobileOverlay.addEventListener('click', hideSidebar);
+    }
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

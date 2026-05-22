@@ -5,4 +5,3 @@ dj-database-url
 whitenoise
 pillow
 python-dotenv
-django-jet-reboot
