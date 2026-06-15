@@ -131,6 +131,10 @@
 
             <!-- Nav Actions -->
             <div class="nav-actions">
+                <a href="#" class="nav-action-btn">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Track Order</span>
+                </a>
                 {% if user.is_authenticated %}
                     <a href="{% url 'dashboard' %}" class="nav-action-btn">
                         <i class="fas fa-user"></i>
@@ -173,6 +177,21 @@
                     </div>
                     <span>Cart</span>
                 </a>
+                <div class="nav-action-btn more-dropdown-wrap">
+                    <div class="cart-icon-wrap" style="color: var(--accent);">
+                        <i class="fas fa-bars"></i>
+                    </div>
+                    <span style="color: var(--accent);">More</span>
+                    <div class="more-dropdown">
+                        <div class="more-dropdown-inner">
+                            <a href="#"><i class="far fa-address-card"></i> About Us</a>
+                            <a href="{% if user.is_authenticated %}{% url 'wishlist' %}{% else %}{% url 'login' %}?next={% url 'wishlist' %}{% endif %}"><i class="far fa-heart"></i> Wishlists</a>
+                            <a href="#"><i class="far fa-question-circle"></i> Faqs</a>
+                            <a href="tel:+8801234567890"><i class="fas fa-phone-alt"></i> Call Us</a>
+                            <a href="https://wa.me/8801234567890" style="color: #25D366;"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
