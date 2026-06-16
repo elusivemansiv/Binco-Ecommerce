@@ -28,8 +28,8 @@
     --transition: all 0.25s ease;
 }
 
-html { scroll-behavior: smooth; }
-body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; overflow-x: hidden; }
 a { text-decoration: none; color: inherit; }
 img { display: block; width: 100%; object-fit: cover; }
 input, textarea, select { font-family: inherit; }
@@ -513,6 +513,7 @@ input, textarea, select { font-family: inherit; }
     height: 40px; 
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -1012,21 +1013,28 @@ input, textarea, select { font-family: inherit; }
     .mobile-sidebar-overlay { display: block; }
     
     /* Navbar & Search Fixes */
-    .navbar-inner { flex-wrap: nowrap; gap: 8px; justify-content: flex-start; }
-    .mobile-menu-toggle { display: block; order: 1; font-size: 24px; background: none; border: none; color: #1a1a2e; padding: 0 8px 0 0; outline: none; }
-    .brand-logo { order: 2; margin-right: auto; font-size: 22px; }
+    .navbar-inner { flex-wrap: wrap; gap: 8px; justify-content: space-between; }
+    .mobile-menu-toggle { display: block; order: 1; font-size: 24px; background: none; border: none; color: #1a1a2e; padding: 0; outline: none; }
+    .brand-logo { order: 2; font-size: 22px; margin-right: auto; padding-left: 8px; }
     .brand-logo .logo-bi { font-size: 20px; }
-    .nav-actions { order: 3; gap: 0; margin-right: 5px; }
+    .nav-actions { order: 3; gap: 0; }
     .nav-action-btn:not(.cart-btn) { display: none !important; }
     .cart-btn { padding: 4px; }
     .cart-btn span { display: none; }
-    .search-bar { order: 4; width: auto; flex: 1; min-width: 110px; margin: 0; }
-    .search-bar input { padding: 6px 12px; font-size: 13.5px; height: 38px; border-radius: 20px 0 0 20px; min-width: 0; }
-    .search-bar button { padding: 6px 14px; height: 38px; border-radius: 0 20px 20px 0; }
+    
+    .search-bar { order: 4; width: 100%; flex: 1 1 100%; margin-top: 5px; min-width: unset; }
+    .search-bar input { padding: 8px 16px; font-size: 14px; height: 42px; border-radius: 20px 0 0 20px; }
+    .search-bar button { padding: 8px 18px; height: 42px; border-radius: 0 20px 20px 0; }
     
     /* Hero */
     .hero-section { padding: 40px 0; }
     .hero-text h1 { font-size: 28px; }
+    #heroCarousel { height: 240px !important; }
+    .carousel-caption { bottom: 0 !important; padding-bottom: 15px !important; }
+    .carousel-caption h1 { font-size: 1.8rem !important; margin-bottom: 5px !important; line-height: 1.2 !important; }
+    .carousel-caption p.lead { font-size: 13px !important; margin-bottom: 10px !important; }
+    .hero-actions.mt-4 { margin-top: 5px !important; }
+    .carousel-caption .btn-shop { padding: 8px 16px !important; font-size: 13px !important; }
     
     /* Grids */
     .products-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
@@ -1061,8 +1069,19 @@ input, textarea, select { font-family: inherit; }
     .auth-card { padding: 28px 20px; }
 }
 @media (max-width: 576px) {
-    .hero-actions { flex-direction: column; }
-    .btn-shop, .btn-sell { width: 100%; text-align: center; justify-content: center; }
+    /* Dynamic Slider Mobile Sizes */
+    .hero-slider-wrap { padding: 8px 0 !important; }
+    #heroCarousel { height: 200px !important; border-radius: 12px; }
+    .carousel-caption { padding-bottom: 10px !important; }
+    .carousel-caption h1 { font-size: 1.4rem !important; margin-bottom: 4px !important; text-shadow: 0 2px 4px rgba(0,0,0,0.5); line-height: 1.2 !important; }
+    .carousel-caption p.lead { font-size: 11px !important; margin-bottom: 8px !important; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .carousel-caption .hero-actions { flex-direction: row; margin-top: 5px !important; }
+    .carousel-caption .btn-shop { width: auto !important; padding: 6px 14px !important; font-size: 11px !important; border: 1px solid var(--accent); }
+
+    /* Fallback Hero Mobile Sizes */
+    .hero-section .hero-actions { flex-direction: column; }
+    .hero-section .btn-shop, .hero-section .btn-sell { width: 100%; text-align: center; justify-content: center; }
+    
     .detail-actions { flex-direction: column; }
     .categories-grid { grid-template-columns: repeat(3, 1fr); }
     
