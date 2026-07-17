@@ -8,7 +8,8 @@ from datetime import timedelta
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side
 
-from store.models import Order, OrderItem, Product
+from orders.models import Order, OrderItem
+from catalog.models import Product
 from django.contrib.auth.models import User
 from .models import Expense
 

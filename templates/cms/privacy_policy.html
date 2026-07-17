@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Privacy Policy – Binco{% endblock %}
+
+{% block content %}
+<div class="bg-light py-5">
+    <div class="container py-4 text-center">
+        <h1 class="display-5 fw-bold mb-3">Privacy Policy</h1>
+        <p class="text-muted">Last updated: <span class="fw-medium text-dark">November 10, 2026</span></p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row g-5 justify-content-center">
+        <!-- Sidebar Navigation (Sticky) -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="position-sticky" style="top: 100px;">
+                <h5 class="fw-bold mb-4">Table of Contents</h5>
+                <nav id="privacy-nav" class="nav flex-column policy-nav">
+                    <a class="nav-link active" href="#info-collection">1. Information Collection</a>
+                    <a class="nav-link" href="#how-we-use">2. How We Use Information</a>
+                    <a class="nav-link" href="#sharing">3. Sharing of Information</a>
+                    <a class="nav-link" href="#security">4. Data Security</a>
+                    <a class="nav-link" href="#your-rights">5. Your Privacy Rights</a>
+                    <a class="nav-link" href="#contact">6. Contact Us</a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="policy-content bg-white p-4 p-md-5 rounded-4 shadow-sm border border-light">
+                <p class="lead mb-5 text-secondary">At Binco, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our services.</p>
+
+                <div id="info-collection" class="policy-section mb-5 pt-3">
+                    <h3 class="fw-bold mb-3 text-dark">1. Information Collection</h3>
+                    <p>We collect information that you provide directly to us when you register for an account, make a purchase, or communicate with us. This may include:</p>
+                    <ul class="text-muted">
+                        <li>Personal identification information (Name, email address, phone number, shipping address).</li>
+                        <li>Payment and billing information (processed securely through our payment partners).</li>
+                        <li>Account credentials and profile data.</li>
+                    </ul>
+                    <p>We also automatically collect certain information when you visit our site, such as your IP address, browser type, device information, and browsing patterns.</p>
+                </div>
+
+                <div id="how-we-use" class="policy-section mb-5 pt-3">
+                    <h3 class="fw-bold mb-3 text-dark">2. How We Use Information</h3>
+                    <p>We use the information we collect for various purposes, including to:</p>
+                    <ul class="text-muted">
+                        <li>Process your transactions and deliver the products you ordered.</li>
+                        <li>Provide, maintain, and improve our services.</li>
+                        <li>Send you technical notices, updates, security alerts, and support messages.</li>
+                        <li>Respond to your comments, questions, and customer service requests.</li>
+                        <li>Communicate with you about products, services, offers, and promotions (you can opt-out at any time).</li>
+                    </ul>
+                </div>
+
+                <div id="sharing" class="policy-section mb-5 pt-3">
+                    <h3 class="fw-bold mb-3 text-dark">3. Sharing of Information</h3>
+                    <p>We do not sell your personal information to third parties. We may share your information only in the following circumstances:</p>
+                    <ul class="text-muted">
+                        <li>With vendors, consultants, and other service providers who need access to such information to carry out work on our behalf (e.g., shipping companies, payment processors).</li>
+                        <li>In response to a request for information if we believe disclosure is in accordance with, or required by, any applicable law or legal process.</li>
+                        <li>With your consent or at your direction.</li>
+                    </ul>
+                </div>
+
+                <div id="security" class="policy-section mb-5 pt-3">
+                    <h3 class="fw-bold mb-3 text-dark">4. Data Security</h3>
+                    <p class="text-muted">We implement appropriate technical and organizational measures to protect the security of your personal information against unauthorized access, loss, destruction, or alteration. However, please note that no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure.</p>
+                </div>
+
+                <div id="your-rights" class="policy-section mb-5 pt-3">
+                    <h3 class="fw-bold mb-3 text-dark">5. Your Privacy Rights</h3>
+                    <p>Depending on your location, you may have the right to:</p>
+                    <ul class="text-muted">
+                        <li>Access the personal information we hold about you.</li>
+                        <li>Request the correction of inaccurate personal information.</li>
+                        <li>Request the deletion of your personal information.</li>
+                        <li>Opt-out of marketing communications at any time.</li>
+                    </ul>
+                </div>
+
+                <div id="contact" class="policy-section mb-4 pt-3">
+                    <h3 class="fw-bold mb-3 text-dark">6. Contact Us</h3>
+                    <p class="text-muted">If you have any questions or concerns about this Privacy Policy, please contact us at:</p>
+                    <div class="bg-light p-4 rounded-3 mt-3 border">
+                        <p class="mb-1"><i class="fas fa-envelope text-primary me-2"></i> privacy@binco.com</p>
+                        <p class="mb-0"><i class="fas fa-map-marker-alt text-primary me-2"></i> 123 E-commerce Avenue, Dhaka 1212, Bangladesh</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .policy-nav .nav-link {
+        color: var(--bs-gray-600);
+        padding: 0.5rem 1rem;
+        border-left: 2px solid transparent;
+        transition: all 0.2s ease;
+        margin-bottom: 0.25rem;
+    }
+    .policy-nav .nav-link:hover {
+        color: var(--primary);
+        background-color: var(--bs-gray-100);
+        border-radius: 0 4px 4px 0;
+    }
+    .policy-nav .nav-link.active {
+        color: var(--primary);
+        font-weight: 600;
+        border-left-color: var(--primary);
+        background-color: var(--primary-light, rgba(var(--bs-primary-rgb), 0.05));
+    }
+    .policy-content p, .policy-content ul {
+        line-height: 1.8;
+    }
+    .policy-content li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Simple scrollspy implementation for the sidebar
+        const sections = document.querySelectorAll('.policy-section');
+        const navLinks = document.querySelectorAll('.policy-nav .nav-link');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

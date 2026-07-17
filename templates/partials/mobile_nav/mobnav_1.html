@@ -1,0 +1,77 @@
+<style>
+/* ── BOTTOM MOBILE NAV ── */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    z-index: 1050;
+    border-top: 1px solid #eee;
+}
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0;
+    }
+    body {
+        padding-bottom: 60px; /* Space for the bottom nav */
+    }
+}
+.mobile-nav-item {
+    text-align: center;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 500;
+    flex: 1;
+    position: relative;
+}
+.mobile-nav-item:hover, .mobile-nav-item.active {
+    color: var(--primary);
+}
+.mobile-nav-item i {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 3px;
+}
+.mobile-nav-item .cart-badge {
+    position: absolute;
+    top: -5px;
+    right: 25%;
+    background: var(--danger);
+    color: white;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+</style>
+
+<div class="mobile-bottom-nav">
+    <a href="{% url 'home' %}" class="mobile-nav-item">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" onclick="document.getElementById('mobileMenuBtn').click();">
+        <i class="fas fa-bars"></i>
+        <span>Menu</span>
+    </a>
+    <a href="{% url 'cart' %}" class="mobile-nav-item">
+        <i class="fas fa-shopping-bag"></i>
+        <span>Cart</span>
+        <span class="cart-badge">{{ cart_count|default:"0" }}</span>
+    </a>
+    <a href="javascript:void(0)" class="mobile-nav-item" onclick="document.querySelector('.search-bar input').focus();">
+        <i class="fas fa-search"></i>
+        <span>Search</span>
+    </a>
+    <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}" class="mobile-nav-item">
+        <i class="far fa-user"></i>
+        <span>Account</span>
+    </a>
+</div>

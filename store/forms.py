@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, ProductVariation, ProductImage, Color, Size, Category
+from catalog.models import Product, ProductVariation, ProductImage, Color, Size, Category
 
 class ProductForm(forms.ModelForm):
     class Meta:

@@ -25,10 +25,12 @@ urlpatterns = [
     path('order/<int:order_id>/invoice/', views.generate_invoice, name='generate_invoice'),
     path('become-seller/', accounts_views.become_seller, name='become_seller'),
     path('orders/<int:order_id>/request-return/', views.request_return, name='request_return'),
+    path('track-order/', views.track_order, name='track_order'),
 
     # Wishlist
     path('wishlist/', views.wishlist_view, name='wishlist'),
     path('wishlist/add/<int:product_id>/', views.add_to_wishlist, name='add_to_wishlist'),
+    path('wishlist/remove/<int:product_id>/', views.remove_from_wishlist, name='remove_from_wishlist'),
 
     # Seller
     path('seller/', views.seller_dashboard, name='seller_dashboard'),

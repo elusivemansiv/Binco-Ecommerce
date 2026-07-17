@@ -12,12 +12,13 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q, Sum, Count, F
 from datetime import timedelta
-from .models import (
-    Product, Category, Cart, CartItem, Order, OrderItem,
-    Wishlist, Coupon, ProductReview, ProductImage,
-    ProductVariation, Color, Size, ShippingConfig
-)
-from cms.models import Banner as CMSBanner, HomeSlider, PromotionCard
+from catalog.models import Product, Category, ProductImage, ProductVariation, Color, Size
+from cart.models import Cart, CartItem, Coupon
+from orders.models import Order, OrderItem
+from store.models import ShippingConfig
+from wishlist.models import Wishlist
+from reviews.models import ProductReview
+from cms.models import Banner as CMSBanner, HomeSlider, PromotionCard, Article, Testimonial
 
 
 # ─────────────────────────── HOME ────────────────────────────
@@ -29,6 +30,8 @@ def home(request):
     sliders = HomeSlider.objects.filter(is_active=True)
     promotions = PromotionCard.objects.filter(is_active=True)
     cms_banners = CMSBanner.objects.filter(is_active=True)
+    blog_posts = Article.objects.filter(is_published=True).order_by('-published_at')[:3]
+    testimonials = Testimonial.objects.filter(is_active=True)
 
     context = {
         'all_categories': all_categories,
@@ -38,6 +41,8 @@ def home(request):
         'sliders': sliders,
         'promotions': promotions,
         'cms_banners': cms_banners,
+        'blog_posts': blog_posts,
+        'testimonials': testimonials,
     }
     return render(request, 'store/home.html', context)
 
@@ -211,7 +216,6 @@ def add_to_cart(request, product_id):
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true'
 
     # --- Variation Stock Check ---
-    from .models import ProductVariation
     variation = ProductVariation.objects.filter(
         product=product,
         color__name=color_name if color_name else None,
@@ -247,11 +251,16 @@ def add_to_cart(request, product_id):
     success_msg = f'"{product.name}" added to cart!'
     
     if is_ajax:
-        from django.http import JsonResponse
+        from django.template.loader import render_to_string
+        cart_total = cart.total
+        header_cart_items = cart.items.select_related('product').all()
+        cart_dropdown_html = render_to_string('partials/headers/cart_dropdown.html', {'header_cart_items': header_cart_items})
         return JsonResponse({
             'status': 'success', 
             'message': success_msg,
-            'cart_count': cart_count
+            'cart_count': cart_count,
+            'cart_total': f'{cart_total:.2f}',
+            'cart_dropdown_html': cart_dropdown_html
         })
 
     messages.success(request, success_msg)
@@ -264,7 +273,7 @@ def update_cart(request, item_id):
     qty = int(request.POST.get('quantity', 1))
     
     # Optional: Add stock validation on update
-    from .models import ProductVariation
+
     variation = ProductVariation.objects.filter(
         product=item.product,
         color__name=item.color if item.color else None,
@@ -289,7 +298,25 @@ def update_cart(request, item_id):
 @login_required(login_url='login')
 def remove_from_cart(request, item_id):
     item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
+    cart = item.cart
     item.delete()
+    
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true'
+    
+    if is_ajax:
+        from django.template.loader import render_to_string
+        cart_count = cart.items.count()
+        cart_total = cart.total
+        header_cart_items = cart.items.select_related('product').all()
+        cart_dropdown_html = render_to_string('partials/headers/cart_dropdown.html', {'header_cart_items': header_cart_items})
+        return JsonResponse({
+            'status': 'success', 
+            'message': 'Item removed from cart.',
+            'cart_count': cart_count,
+            'cart_total': f'{cart_total:.2f}',
+            'cart_dropdown_html': cart_dropdown_html
+        })
+        
     messages.info(request, 'Item removed from cart.')
     return redirect('cart')
 
@@ -346,7 +373,7 @@ def checkout(request):
 
     if request.method == 'POST':
         # --- Stock validation ---
-        from .models import ProductVariation
+
         for item in items:
             variation = ProductVariation.objects.filter(
                 product=item.product,
@@ -497,12 +524,59 @@ def wishlist_view(request):
 def add_to_wishlist(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+    
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true' or request.GET.get('ajax') == 'true'
+
     if product in wishlist.products.all():
         wishlist.products.remove(product)
-        messages.info(request, f'"{product.name}" removed from wishlist.')
+        msg = f'"{product.name}" removed from wishlist.'
+        if not is_ajax:
+            messages.info(request, msg)
     else:
         wishlist.products.add(product)
-        messages.success(request, f'"{product.name}" added to wishlist!')
+        msg = f'"{product.name}" added to wishlist!'
+        if not is_ajax:
+            messages.success(request, msg)
+            
+    if is_ajax:
+        from django.template.loader import render_to_string
+        wishlist_count = wishlist.products.count()
+        header_wishlist_products = wishlist.products.all()
+        wishlist_dropdown_html = render_to_string('partials/headers/wishlist_dropdown.html', {'header_wishlist_products': header_wishlist_products})
+        return JsonResponse({
+            'status': 'success', 
+            'message': msg,
+            'wishlist_count': wishlist_count,
+            'wishlist_dropdown_html': wishlist_dropdown_html
+        })
+        
+    return redirect(request.META.get('HTTP_REFERER', 'wishlist'))
+
+@login_required(login_url='login')
+def remove_from_wishlist(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+    
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true' or request.GET.get('ajax') == 'true'
+
+    if product in wishlist.products.all():
+        wishlist.products.remove(product)
+        msg = f'"{product.name}" removed from wishlist.'
+        if not is_ajax:
+            messages.info(request, msg)
+            
+    if is_ajax:
+        from django.template.loader import render_to_string
+        wishlist_count = wishlist.products.count()
+        header_wishlist_products = wishlist.products.all()
+        wishlist_dropdown_html = render_to_string('partials/headers/wishlist_dropdown.html', {'header_wishlist_products': header_wishlist_products})
+        return JsonResponse({
+            'status': 'success', 
+            'message': msg,
+            'wishlist_count': wishlist_count,
+            'wishlist_dropdown_html': wishlist_dropdown_html
+        })
+
     return redirect(request.META.get('HTTP_REFERER', 'wishlist'))
 
 
@@ -560,6 +634,7 @@ def seller_dashboard(request):
         'labels': labels,
         'earnings_series': earnings_series,
         'orders_series': orders_series,
+        'seller_active_page': 'dashboard',
     }
     return render(request, 'store/seller_dashboard.html', context)
 
@@ -570,7 +645,7 @@ def seller_products(request):
         return redirect('dashboard')
     
     products = Product.objects.filter(seller=request.user)
-    context = {'products': products}
+    context = {'products': products, 'seller_active_page': 'products'}
     return render(request, 'store/seller_products.html', context)
 
 
@@ -608,7 +683,8 @@ def seller_orders(request):
         
     context = {
         'orders': orders_dict.values(),
-        'current_status': status_filter
+        'current_status': status_filter,
+        'seller_active_page': 'orders',
     }
     return render(request, 'store/seller_orders.html', context)
 
@@ -659,7 +735,8 @@ def add_product(request):
         'form': form,
         'variation_formset': variation_formset,
         'image_formset': image_formset,
-        'action': 'Add'
+        'action': 'Add',
+        'seller_active_page': 'add_product',
     }
     return render(request, 'store/product_form.html', context)
 
@@ -694,7 +771,8 @@ def edit_product(request, product_id):
         'variation_formset': variation_formset,
         'image_formset': image_formset,
         'product': product,
-        'action': 'Edit'
+        'action': 'Edit',
+        'seller_active_page': 'products',
     }
     return render(request, 'store/product_form.html', context)
 
@@ -798,3 +876,6 @@ def generate_invoice(request, order_id):
     if pisa_status.err:
        return HttpResponse('We had some errors <pre>' + html + '</pre>')
     return response
+
+def track_order(request):
+    return render(request, 'store/track_order.html')

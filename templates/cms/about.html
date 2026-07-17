@@ -1,0 +1,531 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}About Us – Binco{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --sellzy-green: var(--primary);
+        --sellzy-light-pink: var(--primary-light);
+        --sellzy-light-green: var(--primary-light);
+        --sellzy-bg: var(--bg);
+    }
+    
+    body {
+        background-color: var(--sellzy-bg);
+    }
+    
+    .section-pill {
+        display: inline-block;
+        padding: 4px 12px;
+        background-color: var(--sellzy-light-green);
+        color: var(--sellzy-green);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .stat-box {
+        background: #fff;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .service-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 2.5rem 1.5rem;
+        height: 100%;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        transition: transform 0.3s ease;
+    }
+    .service-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .service-icon-wrap {
+        width: 60px;
+        height: 60px;
+        background-color: var(--sellzy-light-pink);
+        color: #e83e8c;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 1.5rem;
+    }
+
+    .bullet-icon {
+        color: var(--sellzy-green);
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .testimonial-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        height: 100%;
+    }
+
+    .team-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        height: 100%;
+    }
+    .team-img-wrap {
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        background: #f8f9fa;
+        aspect-ratio: 1;
+    }
+    .team-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .social-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--sellzy-green);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: background-color 0.2s;
+    }
+    .social-circle:hover {
+        background-color: #0b6b61;
+        color: white;
+    }
+
+    .curved-bg {
+        background-color: var(--sellzy-light-pink);
+        border-radius: 0 0 50px 50px;
+        padding: 4rem 0 6rem;
+    }
+    .curved-bg-green {
+        background-color: var(--sellzy-light-green);
+        border-radius: 50px 50px 0 0;
+        padding: 6rem 0 4rem;
+        margin-top: 4rem;
+    }
+
+    .hero-img-1 {
+        border-radius: 20px;
+        width: 60%;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    .hero-img-2 {
+        border-radius: 20px;
+        width: 70%;
+        position: absolute;
+        bottom: -20px;
+        right: 0;
+        z-index: 1;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    
+    .video-play-btn {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60px;
+        height: 60px;
+        background: transparent;
+        border: 2px solid white;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 10;
+        padding-left: 5px; /* offset play icon slightly */
+    }
+    
+    @media (max-width: 768px) {
+        .hero-img-1 { width: 100%; border-radius: 15px; }
+        .hero-img-2 { display: none; }
+        .stat-box { margin: 1rem 0 !important; padding: 1rem; }
+        .stat-box h2 { font-size: 1.5rem; }
+        .stat-box .col-6 { padding-left: 5px; padding-right: 5px; }
+        .curved-bg { padding: 3rem 0; }
+        .curved-bg-green { padding: 3rem 0; margin-top: 2rem; }
+        .app-mockup-wrap { min-height: 350px !important; }
+        .phone-mockup-1 { width: 180px !important; height: 380px !important; border-width: 10px !important; margin: 0 auto !important; left: 0 !important; right: 0 !important; position: relative !important; bottom: 0 !important; }
+        .phone-mockup-2 { display: none !important; }
+        .app-download-content { padding: 2rem 1rem !important; text-align: center; }
+        .app-download-content h2 { font-size: 2rem !important; }
+    }
+</style>
+
+<div class="container py-5 my-3">
+    <!-- Hero Section -->
+    <div class="row g-5 align-items-center mb-5 pb-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4 text-dark" style="line-height: 1.2;">
+                {{ about_page.hero_title|default:"Empowering Better Health at Home" }}
+            </h1>
+            
+            <div class="mb-4">
+                <h5 class="fw-bold text-dark mb-2">Our Mission</h5>
+                <p class="text-muted" style="line-height: 1.7;">
+                    {{ about_page.mission_text|default:"We are building the future of commerce, making quality products accessible to everyone, everywhere." }}
+                </p>
+            </div>
+            
+            <div>
+                <h5 class="fw-bold text-dark mb-2">Our Vision</h5>
+                <p class="text-muted" style="line-height: 1.7;">
+                    {{ about_page.vision_text|default:"To create a seamless, enjoyable, and reliable shopping platform that puts the customer first." }}
+                </p>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 position-relative" style="min-height: 450px;">
+            {% if about_page.hero_image_1 %}
+                <img src="{{ about_page.hero_image_1.url }}" alt="Hero Image 1" class="hero-img-1">
+            {% else %}
+                <div class="hero-img-1" style="height: 400px; background-color: var(--sellzy-light-green);"></div>
+            {% endif %}
+            
+            {% if about_page.hero_image_2 %}
+                <img src="{{ about_page.hero_image_2.url }}" alt="Hero Image 2" class="hero-img-2">
+            {% else %}
+                <div class="hero-img-2" style="height: 350px; background-color: var(--sellzy-light-pink);"></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stat-box mt-4 position-relative z-index-2 mx-lg-5">
+        <div class="row text-center g-4">
+            {% if about_page.stats.exists %}
+                {% for stat in about_page.stats.all %}
+                <div class="col-6 col-md-3 border-end border-light">
+                    <h2 class="fw-bold text-dark mb-1">{{ stat.value }}</h2>
+                    <p class="text-muted mb-0 small fw-medium">{{ stat.label }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- Defaults -->
+                <div class="col-6 col-md-3">
+                    <h2 class="fw-bold text-dark mb-1">120+</h2>
+                    <p class="text-muted mb-0 small fw-medium">Years of Experience</p>
+                </div>
+                <div class="col-6 col-md-3">
+                    <h2 class="fw-bold text-dark mb-1">100M</h2>
+                    <p class="text-muted mb-0 small fw-medium">Orders Delivered</p>
+                </div>
+                <div class="col-6 col-md-3">
+                    <h2 class="fw-bold text-dark mb-1">100K+</h2>
+                    <p class="text-muted mb-0 small fw-medium">5-Star Reviews</p>
+                </div>
+                <div class="col-6 col-md-3">
+                    <h2 class="fw-bold text-dark mb-1">99%</h2>
+                    <p class="text-muted mb-0 small fw-medium">Customer Satisfaction</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quality / Services Section -->
+<div class="curved-bg mt-n5 pt-5 pb-5">
+    <div class="container pt-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-dark">{{ about_page.services_title|default:"Quality is our priority" }}</h2>
+            <p class="text-muted">{{ about_page.services_subtitle|default:"We are dedicated to providing the best service" }}</p>
+        </div>
+        
+        <div class="row justify-content-center g-4">
+            {% if about_page.services.exists %}
+                {% for service in about_page.services.all %}
+                <div class="col-md-4">
+                    <div class="service-card">
+                        <div class="service-icon-wrap">
+                            <i class="{{ service.icon_class }}"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-3">{{ service.title }}</h5>
+                        <p class="text-muted small mb-0">{{ service.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-md-4">
+                    <div class="service-card">
+                        <div class="service-icon-wrap"><i class="fas fa-truck-fast"></i></div>
+                        <h5 class="fw-bold text-dark mb-3">Free Shipping</h5>
+                        <p class="text-muted small mb-0">Enjoy 100% free delivery on all your orders, saving you money on every purchase.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="service-card">
+                        <div class="service-icon-wrap"><i class="fas fa-headset"></i></div>
+                        <h5 class="fw-bold text-dark mb-3">24/7 Support</h5>
+                        <p class="text-muted small mb-0">Our dedicated support team is available around the clock to assist you.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="service-card">
+                        <div class="service-icon-wrap"><i class="fas fa-undo"></i></div>
+                        <h5 class="fw-bold text-dark mb-3">30 Days Return</h5>
+                        <p class="text-muted small mb-0">Not satisfied? Return your items within 30 days for a full refund or exchange.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Feature 1: Faster Free Delivery -->
+<div class="container py-5 mt-4">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+            <div class="section-pill"><i class="fas fa-star me-1"></i> {{ about_page.feature1_tagline|default:"Features" }}</div>
+            <h2 class="display-6 fw-bold text-dark mb-4">{{ about_page.feature1_title|default:"Faster Free Delivery" }}</h2>
+            <p class="text-muted mb-4" style="line-height: 1.8;">
+                {{ about_page.feature1_description|default:"Experience the ultimate convenience with our Faster Free Delivery service. Designed to bring your orders to your doorstep quickly and without any extra cost." }}
+            </p>
+            
+            <ul class="list-unstyled mb-0">
+                {% if about_page.feature1_bullet1 %}
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> {{ about_page.feature1_bullet1 }}</li>
+                {% endif %}
+                {% if about_page.feature1_bullet2 %}
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> {{ about_page.feature1_bullet2 }}</li>
+                {% endif %}
+                {% if about_page.feature1_bullet3 %}
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> {{ about_page.feature1_bullet3 }}</li>
+                {% endif %}
+                {% if not about_page.feature1_bullet1 and not about_page.feature1_bullet2 and not about_page.feature1_bullet3 %}
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> Enjoy fast free delivery for orders over $50</li>
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> Real-time tracking keeps you updated every step</li>
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> Secure packaging ensures your items arrive safely</li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="col-lg-6 text-end position-relative">
+            <div class="d-flex justify-content-end gap-3 align-items-center">
+                {% if about_page.feature1_image1 %}
+                    <img src="{{ about_page.feature1_image1.url }}" alt="Feature 1" class="img-fluid rounded-4 shadow-sm" style="max-height: 400px;">
+                {% else %}
+                    <div style="width: 250px; height: 400px; background-color: var(--sellzy-light-green); border-radius: 20px;"></div>
+                {% endif %}
+                
+                {% if about_page.feature1_image2 %}
+                    <img src="{{ about_page.feature1_image2.url }}" alt="Feature 1b" class="img-fluid rounded-4 shadow-sm" style="max-height: 300px;">
+                {% else %}
+                    <div style="width: 150px; height: 300px; background-color: var(--sellzy-light-pink); border-radius: 20px;"></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- App Download Section -->
+<div class="container py-5 my-5">
+    <div class="row align-items-center rounded-4 shadow-lg overflow-hidden position-relative" style="background-color: #1a2955; color: white;">
+        
+        <!-- Left Side: Phone Mockups -->
+        <div class="col-lg-6 p-0 position-relative app-mockup-wrap" style="min-height: 450px;">
+            <!-- Background Decoration -->
+            <div class="position-absolute rounded-circle" style="width: 300px; height: 300px; background-color: rgba(255,255,255,0.05); top: -50px; left: -50px;"></div>
+            
+            <div class="d-flex justify-content-center align-items-end h-100 position-relative pt-5 pb-0">
+                
+                <!-- Phone 2 (Back) -->
+                <div class="position-absolute phone-mockup-2" style="left: 15%; bottom: -30px; transform: scale(0.85); z-index: 1;">
+                    <div style="width: 250px; height: 500px; border: 12px solid #333; border-radius: 35px; background: #fff; position: relative; overflow: hidden; box-shadow: -10px 10px 30px rgba(0,0,0,0.3);">
+                        <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px; background: #333; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 2;"></div>
+                        {% if about_page.app_image_2 %}
+                            <img src="{{ about_page.app_image_2.url }}" alt="App Screen 2" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
+                                <i class="fas fa-image fa-3x opacity-25"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Phone 1 (Front) -->
+                <div class="position-relative phone-mockup-1" style="z-index: 2; margin-left: 20%; bottom: -10px;">
+                    <div class="phone-mockup-1" style="width: 260px; height: 540px; border: 14px solid #111; border-radius: 40px; background: #fff; position: relative; overflow: hidden; box-shadow: -15px 15px 40px rgba(0,0,0,0.5);">
+                        <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 28px; background: #111; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; z-index: 2;"></div>
+                        {% if about_page.app_image_1 %}
+                            <img src="{{ about_page.app_image_1.url }}" alt="App Screen 1" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
+                                <i class="fas fa-image fa-3x opacity-25"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- Right Side: Text and Buttons -->
+        <div class="col-lg-6 p-5 position-relative z-3 app-download-content">
+            {% with default_title="App Is Available For Free In App | Play Store"|safe %}
+            <h2 class="fw-bold mb-4" style="font-size: 2.8rem; line-height: 1.2;">
+                {% if about_page.app_section_title %}{{ about_page.app_section_title|safe }}{% else %}{{ default_title }}{% endif %}
+            </h2>
+            {% endwith %}
+            <p class="mb-5 text-light opacity-75" style="font-size: 1.1rem; line-height: 1.8;">
+                {{ about_page.app_section_description|default:"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." }}
+            </p>
+            
+            <div class="d-flex flex-wrap gap-3">
+                {% if about_page.play_store_link or not about_page.app_store_link %}
+                <a href="{{ about_page.play_store_link|default:'#' }}" class="btn btn-outline-light d-flex align-items-center px-4 py-2" style="border-radius: 12px; border-width: 2px;">
+                    <i class="fab fa-google-play fa-2x me-3"></i>
+                    <div class="text-start">
+                        <small class="d-block text-uppercase fw-semibold" style="font-size: 0.7rem; opacity: 0.8;">GET IT ON</small>
+                        <span class="fw-bold" style="font-size: 1.1rem;">Google Play</span>
+                    </div>
+                </a>
+                {% endif %}
+                
+                {% if about_page.app_store_link or not about_page.play_store_link %}
+                <a href="{{ about_page.app_store_link|default:'#' }}" class="btn btn-outline-light d-flex align-items-center px-4 py-2" style="border-radius: 12px; border-width: 2px;">
+                    <i class="fab fa-apple fa-2x me-3"></i>
+                    <div class="text-start">
+                        <small class="d-block text-uppercase fw-semibold" style="font-size: 0.7rem; opacity: 0.8;">Download on the</small>
+                        <span class="fw-bold" style="font-size: 1.1rem;">App Store</span>
+                    </div>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Feature 2: Focus on Customer Satisfaction -->
+<div class="container py-5 my-5">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-6 position-relative">
+            {% if about_page.feature2_image %}
+                <img src="{{ about_page.feature2_image.url }}" alt="Feature 2" class="img-fluid rounded-4 shadow" style="width: 100%; border-radius: 20px;">
+            {% else %}
+                <div style="width: 100%; height: 400px; background-color: var(--sellzy-green); border-radius: 20px;"></div>
+            {% endif %}
+            {% if about_page.feature2_youtube_link %}
+            <a href="{{ about_page.feature2_youtube_link }}" target="_blank" class="video-play-btn shadow text-decoration-none" style="color: white;">
+                <i class="fas fa-play"></i>
+            </a>
+            {% else %}
+            <div class="video-play-btn shadow">
+                <i class="fas fa-play"></i>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-lg-6 ps-lg-5">
+            <div class="section-pill"><i class="fas fa-star me-1"></i> {{ about_page.feature2_tagline|default:"Features" }}</div>
+            <h2 class="display-6 fw-bold text-dark mb-4">{{ about_page.feature2_title|default:"Focus on Customer Satisfaction" }}</h2>
+            <p class="text-muted mb-4" style="line-height: 1.8;">
+                {{ about_page.feature2_description|default:"Experience the ultimate convenience with our platform. Designed to bring you the best deals and seamless shopping." }}
+            </p>
+            
+            <ul class="list-unstyled mb-0">
+                {% if about_page.feature2_bullet1 %}
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> {{ about_page.feature2_bullet1 }}</li>
+                {% endif %}
+                {% if about_page.feature2_bullet2 %}
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> {{ about_page.feature2_bullet2 }}</li>
+                {% endif %}
+                {% if about_page.feature2_bullet3 %}
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> {{ about_page.feature2_bullet3 }}</li>
+                {% endif %}
+                {% if not about_page.feature2_bullet1 and not about_page.feature2_bullet2 and not about_page.feature2_bullet3 %}
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> Transparent pricing with no hidden charges</li>
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> 24/7 dedicated customer support</li>
+                <li class="mb-3 d-flex align-items-center text-muted fw-medium"><i class="fas fa-check-circle bullet-icon"></i> Trusted partner networks ensure safety</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Meet Our Team -->
+<div class="container py-5 mb-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-dark">{{ about_page.team_title|default:"Meet Our Team" }}</h2>
+        <p class="text-muted">{{ about_page.team_subtitle|default:"A diverse team of passionate individuals dedicated to excellence." }}</p>
+    </div>
+    
+    <div class="row g-4 justify-content-center">
+        {% if about_page.team_members.exists %}
+            {% for member in about_page.team_members.all %}
+            <div class="col-sm-6 col-lg-3">
+                <div class="team-card">
+                    <div class="team-img-wrap">
+                        {% if member.image %}
+                        <img src="{{ member.image.url }}" alt="{{ member.name }}">
+                        {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center h-100" style="border-radius: 50%;">
+                            <i class="fas fa-user fa-3x text-secondary"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">{{ member.name }}</h5>
+                    <p class="text-muted small mb-3">{{ member.role }}</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        {% if member.facebook_url %}
+                        <a href="{{ member.facebook_url }}" class="social-circle"><i class="fab fa-facebook-f"></i></a>
+                        {% endif %}
+                        {% if member.twitter_url %}
+                        <a href="{{ member.twitter_url }}" class="social-circle"><i class="fab fa-twitter"></i></a>
+                        {% endif %}
+                        {% if member.instagram_url %}
+                        <a href="{{ member.instagram_url }}" class="social-circle"><i class="fab fa-instagram"></i></a>
+                        {% endif %}
+                        {% if member.linkedin_url %}
+                        <a href="{{ member.linkedin_url }}" class="social-circle"><i class="fab fa-linkedin-in"></i></a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Default placeholders -->
+            {% for i in "1234" %}
+            <div class="col-sm-6 col-lg-3">
+                <div class="team-card">
+                    <div class="team-img-wrap" style="background-color: var(--sellzy-light-pink); height: 100%;">
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">Jenny Wilson</h5>
+                    <p class="text-muted small mb-3">Managing Director</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="#" class="social-circle"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-circle"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-circle"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

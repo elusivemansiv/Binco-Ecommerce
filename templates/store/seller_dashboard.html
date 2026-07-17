@@ -1,0 +1,174 @@
+{% extends 'store/seller_base.html' %}
+{% block title %}Seller Dashboard – Binco{% endblock %}
+
+{% block seller_extra_head %}
+<style>
+    .stat-box.clickable { cursor: pointer; transition: var(--transition); text-decoration: none; display: flex; flex-direction: column; align-items: center; border-radius: var(--radius-lg); overflow: hidden; }
+    .stat-box.clickable:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: var(--shadow-hover); background: var(--primary-light); }
+    .stat-box i { font-size: 24px; margin-bottom: 12px; transition: transform 0.3s ease; }
+    .stat-box.clickable:hover i { transform: scale(1.1); }
+    .analytics-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 25px; margin-top: 30px; box-shadow: var(--shadow); }
+    .analytics-card h4 { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text); border-bottom: 2px solid var(--bg); padding-bottom: 12px; }
+    
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 30px; }
+    .icon-wrap { width: 50px; height: 50px; background: var(--primary-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .stat-box .stat-num { font-size: 24px; font-weight: 800; color: var(--text); }
+    .stat-box span:last-child { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+    @media (max-width: 576px) {
+        .metric-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .stat-box .stat-num { font-size: 20px; }
+        .icon-wrap { width: 40px; height: 40px; }
+        .icon-wrap i { font-size: 16px !important; }
+        .analytics-card { padding: 16px; }
+    }
+</style>
+{% endblock %}
+
+{% block seller_content %}
+<div class="seller-page-header">
+    <h2><i class="fas fa-chart-line me-2"></i>Dashboard</h2>
+    <p>Welcome back, <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>! Here's your overview.</p>
+</div>
+
+<!-- Main Metrics Row -->
+<div class="metric-grid">
+    <a href="{% url 'seller_orders' %}?status=active" class="stat-box clickable p-4">
+        <div class="icon-wrap"><i class="fas fa-shopping-bag text-primary"></i></div>
+        <span class="stat-num">{{ active_orders }}</span>
+        <span>Active Orders</span>
+    </a>
+    <a href="{% url 'seller_orders' %}?status=success" class="stat-box clickable p-4">
+        <div class="icon-wrap" style="background: rgba(56, 161, 105, 0.1);"><i class="fas fa-check-circle text-success"></i></div>
+        <span class="stat-num">{{ success_orders }}</span>
+        <span>Successful</span>
+    </a>
+    <a href="{% url 'seller_orders' %}?status=cancelled" class="stat-box clickable p-4">
+        <div class="icon-wrap" style="background: rgba(229, 62, 62, 0.1);"><i class="fas fa-times-circle text-danger"></i></div>
+        <span class="stat-num">{{ cancelled_orders }}</span>
+        <span>Cancelled</span>
+    </a>
+    <a href="{% url 'seller_orders' %}?status=returned" class="stat-box clickable p-4">
+        <div class="icon-wrap" style="background: rgba(245, 166, 35, 0.1);"><i class="fas fa-undo text-warning"></i></div>
+        <span class="stat-num">{{ returned_orders }}</span>
+        <span>Returned</span>
+    </a>
+</div>
+
+<!-- Summary Metrics Row -->
+<div class="metric-grid">
+    <div class="stat-box p-4">
+        <div class="icon-wrap" style="background: var(--primary-light);"><i class="fas fa-wallet text-primary"></i></div>
+        <span class="stat-num">৳{{ total_earnings|floatformat:2 }}</span>
+        <span>Total Earnings</span>
+    </div>
+    <div class="stat-box p-4">
+        <div class="icon-wrap" style="background: var(--bg);"><i class="fas fa-box text-muted"></i></div>
+        <span class="stat-num">{{ products_count }}</span>
+        <span>Products Listed</span>
+    </div>
+    <div class="stat-box p-4">
+        <div class="icon-wrap" style="background: rgba(245, 166, 35, 0.1);"><i class="fas fa-star text-warning"></i></div>
+        <span class="stat-num">0.0</span>
+        <span>Seller Rating</span>
+    </div>
+    <div class="stat-box p-4">
+        <div class="icon-wrap" style="background: var(--primary-light);"><i class="fas fa-list-ol text-primary"></i></div>
+        <span class="stat-num">{{ orders_count }}</span>
+        <span>Total Orders</span>
+    </div>
+</div>
+
+<!-- Analytics Graph -->
+<div class="analytics-card">
+    <h4><i class="fas fa-chart-line me-2"></i>Performance (Last 30 Days)</h4>
+    <div style="height: 350px; position: relative;">
+        <canvas id="sellerAnalyticsChart"></canvas>
+    </div>
+</div>
+
+<!-- Quick Access -->
+{% if products_count > 0 %}
+<div class="mt-5 text-center">
+    <a href="{% url 'seller_products' %}" class="btn-checkout d-inline-block" style="width: auto; padding: 12px 30px;">
+        <i class="fas fa-box me-2"></i> Manage My Products
+    </a>
+</div>
+{% else %}
+<div class="empty-state mt-5">
+    <i class="fas fa-box-open"></i>
+    <h3>No products listed yet</h3>
+    <p>Start selling by listing your first product!</p>
+    <a href="{% url 'add_product' %}" class="btn-shop mt-3">Add Product</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block seller_extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('sellerAnalyticsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ labels|safe }},
+                datasets: [
+                    {
+                        label: 'Earnings (৳)',
+                        data: {{ earnings_series|safe }},
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Orders',
+                        data: {{ orders_series|safe }},
+                        borderColor: '#198754',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointStyle: 'circle',
+                        pointRadius: 4,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Earnings (৳)', font: { weight: 'bold' } },
+                        beginAtZero: true
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Orders', font: { weight: 'bold' } },
+                        ticks: { stepSize: 1 },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

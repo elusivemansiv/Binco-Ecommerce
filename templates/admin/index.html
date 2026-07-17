@@ -149,13 +149,14 @@
     .stat-info .sub .up { color: #10b981; }
     .stat-info .sub .down { color: #ef4444; }
 
-    /* ── CHART SECTION ── */
-    .chart-section {
+    /* ── CHART & ORDERS SECTION ── */
+    .chart-orders-row {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 24px;
         margin-bottom: 24px;
     }
+    @media (max-width: 1100px) { .chart-orders-row { grid-template-columns: 1fr; } }
     .panel {
         background: #fff;
         border-radius: 16px;
@@ -350,7 +351,6 @@
     }
 
     /* ── RECENT ORDERS ── */
-    .orders-section { margin-bottom: 24px; }
     .orders-mini-table {
         width: 100%;
         border-collapse: collapse;
@@ -468,8 +468,8 @@
         </div>
     </div>
 
-    <!-- ═══ REVENUE CHART ═══ -->
-    <div class="chart-section">
+    <!-- ═══ REVENUE CHART & RECENT TRANSACTIONS ═══ -->
+    <div class="chart-orders-row">
         <div class="panel">
             <div class="panel-header">
                 <div>
@@ -482,6 +482,44 @@
             </div>
             <div style="position: relative; height: 280px;">
                 <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="panel" style="display: flex; flex-direction: column;">
+            <div class="panel-header">
+                <div>
+                    <h2>Recent Transactions</h2>
+                    <p class="panel-sub">Latest orders from your customers</p>
+                </div>
+                <div class="panel-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">
+                    <i class="fas fa-history"></i>
+                </div>
+            </div>
+            <div style="flex: 1; overflow-y: auto; max-height: 280px;">
+                <table class="orders-mini-table">
+                    <thead style="position: sticky; top: 0; background: #fff; z-index: 1;">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in d.latest_orders %}
+                        <tr>
+                            <td><a href="/admin/store/order/{{ order.id }}/change/" class="order-id-link">#{{ order.id }}</a></td>
+                            <td style="font-weight:600;">{{ order.full_name }}</td>
+                            <td style="font-weight:700;">৳{{ order.final_total|floatformat:0 }}</td>
+                            <td><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                            <td style="color:#94a3b8; font-size:12px;">{{ order.created_at|date:"M d, Y, h:i a" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:30px;">No orders yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -578,44 +616,7 @@
         </div>
     </div>
 
-    <!-- ═══ RECENT TRANSACTIONS ═══ -->
-    <div class="orders-section">
-        <div class="panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Recent Transactions</h2>
-                    <p class="panel-sub">Latest orders from your customers</p>
-                </div>
-                <div class="panel-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">
-                    <i class="fas fa-history"></i>
-                </div>
-            </div>
-            <table class="orders-mini-table">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in d.latest_orders %}
-                    <tr>
-                        <td><a href="/admin/store/order/{{ order.id }}/change/" class="order-id-link">#{{ order.id }}</a></td>
-                        <td style="font-weight:600;">{{ order.full_name }}</td>
-                        <td style="font-weight:700;">৳{{ order.final_total|floatformat:0 }}</td>
-                        <td><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
-                        <td style="color:#94a3b8; font-size:12px;">{{ order.created_at|date:"M d, Y, h:i a" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:30px;">No orders yet.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+
 </div>
 
 <script>

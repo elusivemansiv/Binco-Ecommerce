@@ -1,0 +1,49 @@
+<div class="product-card">
+    {% if product.discount_price %}
+    <div class="sale-badge">-{{ product.discount_percent }}%</div>
+    {% endif %}
+    <a href="{% url 'product_detail' product.id %}" class="product-img-wrap">
+        {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+        {% else %}
+        <div class="no-image"><i class="fas fa-image"></i></div>
+        {% endif %}
+    </a>
+    <div class="product-info">
+        {% if product.category %}
+        <span class="product-cat">{{ product.category.name }}</span>
+        {% endif %}
+        <h3 class="product-name"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h3>
+        <div class="product-rating">
+            {% with rating=product.average_rating %}
+            {% for i in "12345" %}
+            {% if forloop.counter <= rating %}<i class="fas fa-star"></i>
+                {% else %}<i class="far fa-star"></i>{% endif %}
+                {% endfor %}
+                <span>({{ product.reviews.count }})</span>
+                {% endwith %}
+        </div>
+        <div class="product-price">
+            {% if product.discount_price %}
+            <span class="price-current">৳{{ product.discount_price }}</span>
+            <span class="price-old">৳{{ product.price }}</span>
+            {% else %}
+            <span class="price-current">৳{{ product.price }}</span>
+            {% endif %}
+        </div>
+        <div class="product-actions">
+            {% if product.variations.all %}
+            <a href="{% url 'product_detail' product.id %}" class="btn-add-cart" style="background: #64748b; border-color: #64748b;">
+                <i class="fas fa-eye"></i> Select Options
+            </a>
+            {% else %}
+            <a href="{% url 'add_to_cart' product.id %}" class="btn-add-cart">
+                <i class="fas fa-cart-plus"></i> Add to Cart
+            </a>
+            {% endif %}
+            <a href="{% url 'add_to_wishlist' product.id %}" class="btn-wishlist">
+                <i class="fas fa-heart"></i>
+            </a>
+        </div>
+    </div>
+</div>

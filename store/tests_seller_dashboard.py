@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from store.models import Product, Category, Color, Size, ProductVariation, ProductImage
+from catalog.models import Product, Category, Color, Size, ProductVariation, ProductImage
 from accounts.models import UserProfile
 
 class SellerDashboardTest(TestCase):

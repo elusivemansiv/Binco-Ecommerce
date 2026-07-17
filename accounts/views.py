@@ -4,7 +4,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import UserProfile
-from store.models import Order, Wishlist
+from orders.models import Order
+from wishlist.models import Wishlist
 
 
 def register(request):
@@ -83,6 +84,7 @@ def profile_edit(request):
         user.save()
 
         profile.phone = request.POST.get('phone', '')
+        profile.whatsapp_number = request.POST.get('whatsapp_number', '')
         profile.address = request.POST.get('address', '')
         profile.city = request.POST.get('city', '')
         profile.postal_code = request.POST.get('postal_code', '')

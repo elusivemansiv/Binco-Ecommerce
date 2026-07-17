@@ -1,0 +1,316 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<style>
+.testimonial-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    height: 100%;
+    margin-bottom: 40px; /* space for pagination */
+}
+.quote-icon i {
+    font-size: 24px;
+    color: var(--accent);
+}
+.swiper-pagination-bullet-active {
+    background: var(--primary) !important;
+}
+</style>
+{% endblock %}
+
+{% block title %}Binco - Buy & Sell Everything{% endblock %}
+
+{% block content %}
+<!-- ========== HERO ========== -->
+{% with hero_tpl="partials/heroes/"|add:style_settings.hero_style|add:".html" %}
+    {% include hero_tpl %}
+{% endwith %}
+
+<!-- ========== FEATURES ROW (Separate Card) ========== -->
+<section class="py-4">
+    <div class="container">
+        <div class="row text-center g-0 bg-white py-3 border rounded shadow-sm">
+            <div class="col-6 col-md-3">
+                <div class="feature-item d-flex align-items-center justify-content-center gap-3">
+                    <i class="fas fa-truck feature-icon"></i>
+                    <div class="text-start">
+                        <h6 class="mb-0 feature-title">Payment & Delivery</h6>
+                        <small class="feature-sub">Free shipping for order $99</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="feature-item d-flex align-items-center justify-content-center gap-3">
+                    <i class="fas fa-undo feature-icon"></i>
+                    <div class="text-start">
+                        <h6 class="mb-0 feature-title">Return & Refund</h6>
+                        <small class="feature-sub">100% Money Back Guarantee</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="feature-item d-flex align-items-center justify-content-center gap-3">
+                    <i class="far fa-comments feature-icon"></i>
+                    <div class="text-start">
+                        <h6 class="mb-0 feature-title">Quality Support</h6>
+                        <small class="feature-sub">Always Online Feedback 24/7</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="feature-item d-flex align-items-center justify-content-center gap-3">
+                    <i class="far fa-envelope feature-icon"></i>
+                    <div class="text-start">
+                        <h6 class="mb-0 feature-title">Join Our Newsletter</h6>
+                        <small class="feature-sub">20% Flat By Subscribing Us</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== TOP CATEGORIES ========== -->
+<section class="section-block bg-white pt-5 pb-5">
+    <div class="container text-center">
+        <h2 class="section-title-new mb-5">Top Categories</h2>
+        <div class="categories-flex">
+            {% for cat in all_categories|slice:":8" %}
+            <a href="{% url 'product_list' %}?category={{ cat.slug }}" class="category-icon-item">
+                <div class="cat-icon-lg">
+                    {% if cat.icon %}<i class="{{ cat.icon }}"></i>
+                    {% else %}<i class="fas fa-box"></i>{% endif %}
+                </div>
+                <span class="cat-name">{{ cat.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        <div class="mt-4">
+            <a href="{% url 'product_list' %}" class="btn btn-primary rounded-pill px-4">View All Categories</a>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- ========== TOP CATEGORIES ========== -->
+
+
+<!-- ========== FEATURED PRODUCTS ========== -->
+{% if featured %}
+<section class="section-block bg-light-custom">
+    <div class="container">
+        <div class="section-header">
+            <h1>?Featured Products</h1>
+            <a href="{% url 'product_list' %}" class="see-all">View All <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="products-grid">
+            {% for product in featured %}
+            {% with card_tpl="partials/product_cards/"|add:style_settings.product_card_style|add:".html" %}
+                {% include card_tpl with product=product %}
+            {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ========== DEALS BANNER ========== -->
+{% if deals %}
+<section class="section-block deals-section">
+    <div class="container">
+        <div class="deals-header">
+            <div>
+                <h2>🔥 Hot Deals</h2>
+                <p>Limited time offers ?grab them before they're gone!</p>
+            </div>
+            <a href="{% url 'product_list' %}?sort=newest" class="see-all">View All Deals <i
+                    class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="products-grid">
+            {% for product in deals %}
+            <div class="product-card">
+                <div class="sale-badge">-{{ product.discount_percent }}%</div>
+                <a href="{% url 'product_detail' product.id %}" class="product-img-wrap">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+                    {% else %}
+                    <div class="no-image"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                </a>
+                <div class="product-info">
+                    <h3 class="product-name"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h3>
+                    <div class="product-price">
+                        <span class="price-current">৳{{ product.discount_price }}</span>
+                        <span class="price-old">৳{{ product.price }}</span>
+                    </div>
+                    <div class="product-actions">
+                        {% if product.variations.all %}
+                        <a href="{% url 'product_detail' product.id %}" class="btn-add-cart" style="background: #64748b; border-color: #64748b;">
+                            <i class="fas fa-eye"></i> Select Options
+                        </a>
+                        {% else %}
+                        <a href="{% url 'add_to_cart' product.id %}" class="btn-add-cart">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'add_to_wishlist' product.id %}" class="btn-wishlist">
+                            <i class="fas fa-heart"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+
+<!-- ========== TRENDING ========== -->
+{% if trending %}
+<section class="section-block">
+    <div class="container">
+        <div class="section-header">
+            <h2>🆕 New Arrivals</h2>
+            <a href="{% url 'product_list' %}?sort=newest" class="see-all">See All <i
+                    class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="products-grid">
+            {% for product in trending %}
+            {% with card_tpl="partials/product_cards/"|add:style_settings.product_card_style|add:".html" %}
+                {% include card_tpl with product=product %}
+            {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+<!-- ========== WIDE PROMO BANNER ========== -->
+{% if promo_banner.is_active %}
+<section class="wide-promo-banner py-5 mt-5" {% if promo_banner.bg_image %}style="background: url('{{ promo_banner.bg_image.url }}') no-repeat center center/cover;"{% endif %}>
+    <div class="container">
+        <div class="wide-promo-inner text-center position-relative">
+            <div class="watermark-bg-center">{{ promo_banner.watermark_text }}</div>
+            <div class="wide-promo-content position-relative z-2">
+                <h4 class="promo-sub mb-2">{{ promo_banner.subtitle }}</h4>
+                <h2 class="promo-title mb-4">{{ promo_banner.title }}</h2>
+                <p class="promo-desc">{{ promo_banner.description }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ========== TESTIMONIALS ========== -->
+{% if testimonials %}
+<section class="testimonials-section py-5 bg-white">
+    <div class="container">
+        <h2 class="section-title-new text-center mb-5">Listen to other customer's opinions</h2>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="swiper testimonialsSwiper">
+                    <div class="swiper-wrapper">
+                        {% for testimonial in testimonials %}
+                        <div class="swiper-slide">
+                            <div class="testimonial-card mx-3">
+                                <div class="d-flex align-items-center mb-4 gap-3">
+                                    <div class="quote-icon"><i class="fas fa-quote-left"></i></div>
+                                    <div>
+                                        <h5 class="mb-0 fw-bold">{{ testimonial.customer_name }}</h5>
+                                        <small class="text-muted">{{ testimonial.customer_role }}</small>
+                                    </div>
+                                </div>
+                                <p class="text-muted">{{ testimonial.review_text }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="swiper-pagination"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ========== BLOG SECTION ========== -->
+{% if blog_posts %}
+<section class="section-block blog-section py-5 bg-white">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+            <h3 class="mb-0 fw-bold" style="color: #333;">Most Popular Blog Posts</h3>
+            <a href="{% url 'article_list' %}" class="text-muted small text-decoration-none">View All Blogs</a>
+        </div>
+        
+        <div class="row g-4">
+            {% for post in blog_posts %}
+            <div class="col-lg-4 col-md-6">
+                <div class="blog-card border-0 h-100 d-flex flex-column">
+                    <div class="blog-img-wrap position-relative mb-3">
+                        {% if post.image %}
+                        <img src="{{ post.image.url }}" class="img-fluid w-100 blog-img" style="object-fit: cover;" alt="{{ post.title }}">
+                        {% else %}
+                        <div class="bg-light w-100 d-flex align-items-center justify-content-center blog-img">
+                            <span class="text-muted">No Image</span>
+                        </div>
+                        {% endif %}
+                        <!-- Date Badge -->
+                        <div class="date-badge bg-white text-center position-absolute" style="top: 15px; left: 15px; padding: 10px; min-width: 65px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            <div class="fw-bold fs-4 lh-1 text-dark" style="font-family: Arial, sans-serif; font-weight: 900 !important;">{{ post.published_at|date:"d" }}</div>
+                            <div class="small text-muted" style="font-size: 0.75rem;">{{ post.published_at|date:"M Y" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="blog-content flex-grow-1 d-flex flex-column">
+                        <div class="text-muted small mb-2 text-uppercase">{{ post.category }}</div>
+                        <h5 class="fw-bold mb-3 text-dark">{{ post.title|truncatechars:50 }}</h5>
+                        <p class="text-muted small mb-4 flex-grow-1" style="line-height: 1.6;">
+                            {{ post.content|striptags|truncatechars:120 }}
+                        </p>
+                        <div class="mt-auto">
+                            <a href="{% url 'article_detail' post.slug %}" class="btn btn-primary rounded-pill px-4" style="padding: 8px 20px; font-size: 0.8rem; font-weight: bold;">READ MORE</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var swiper = new Swiper(".testimonialsSwiper", {
+            slidesPerView: 1,
+            spaceBetween: 30,
+            autoplay: {
+                delay: 4000,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            breakpoints: {
+                768: {
+                    slidesPerView: 2,
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

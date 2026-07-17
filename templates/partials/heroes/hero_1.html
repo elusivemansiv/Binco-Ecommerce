@@ -1,0 +1,75 @@
+<!-- ========== HERO ========== -->
+<!-- ========== DYNAMIC SLIDER & SIDE BANNER & FEATURES ========== -->
+<section class="hero-split-wrap" style="padding: 15px 0 40px 0;">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Left Column: Slider + 3 Features -->
+            <div class="col-lg-9 col-md-12">
+                <!-- Slider -->
+                {% if sliders or cms_banners %}
+                <div id="heroCarousel" class="carousel slide carousel-fade mb-0" data-bs-ride="carousel" style="border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
+                    <div class="carousel-indicators">
+                        {% for slider in sliders %}
+                        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
+                        {% empty %}
+                        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                        {% endfor %}
+                    </div>
+                    <div class="carousel-inner h-100 overflow-hidden">
+                        {% for slider in sliders %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %} h-100" data-bs-interval="5000">
+                            <div class="slider-img"
+                                style="background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.3) 100%), url('{{ slider.image.url }}'); background-size: cover; background-position: right center; height:100%; position:absolute; width:100%;">
+                            </div>
+                            <div class="position-relative h-100 d-flex flex-column justify-content-center p-5 text-start" style="z-index: 2;">
+                                <div class="watermark-bg">{{ slider.title|truncatechars:10 }}</div>
+                                <p class="hero-subtitle mb-2">Exclusive Offer</p>
+                                <h1 class="hero-title mb-3">{{ slider.title }}</h1>
+                                <p class="hero-desc mb-4">{{ slider.subtitle }}</p>
+                                <div class="hero-price-action d-flex align-items-center gap-4">
+                                    {% if slider.link_url %}
+                                    <a href="{{ slider.link_url }}" class="btn-shop-orange">Shop Now</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="carousel-item active h-100" data-bs-interval="5000">
+                            <div class="slider-img bg-dark" style="height:100%; position:absolute; width:100%;"></div>
+                            <div class="position-relative h-100 d-flex flex-column justify-content-center p-5 text-start" style="z-index: 2;">
+                                <h1 class="hero-title mb-3 text-white">Welcome to Binco</h1>
+                                <p class="hero-desc mb-4 text-white">Shop the best deals</p>
+                                <a href="/products/" class="btn-shop-orange" style="width: fit-content;">Shop Now</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Right Column: Side Banner -->
+            <div class="col-lg-3 col-md-12">
+                <div class="side-banner-wrap overflow-hidden position-relative">
+                    {% if cms_banners %}
+                        {% with cms_banners|first as side_banner %}
+                        <div class="side-banner-img h-100 w-100" style="background: url('{{ side_banner.image.url }}'); background-size: cover; background-position: center;"></div>
+                        <div class="side-banner-content position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-end p-4 text-center">
+                            <div class="watermark-bg-center" style="font-size: 50px; opacity:0.1; top:30%;">{{ side_banner.title|truncatechars:8 }}</div>
+                            <h4 class="text-dark fw-bold mb-1">{{ side_banner.title }}</h4>
+                            <p class="text-muted small mb-0">{{ side_banner.subtitle }}</p>
+                            <div class="mt-2">
+                                <a href="{{ side_banner.link_url }}" class="btn btn-dark btn-sm rounded-pill px-3">Shop Now</a>
+                            </div>
+                        </div>
+                        {% endwith %}
+                    {% else %}
+                        <div class="side-banner-img bg-light h-100 w-100 d-flex align-items-center justify-content-center">
+                            <span class="text-muted">Add Banner in Admin</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -47,9 +47,15 @@ class GeneralSettings(SingletonModel):
     twitter_url = models.URLField(blank=True)
     youtube_url = models.URLField(blank=True)
     footer_text = models.CharField(max_length=500, blank=True, default='© 2025 Binco Ecommerce. All rights reserved.')
+    show_developer_stradigtech = models.BooleanField(default=True, help_text='Show "StradigTech" in footer credits')
+    show_developer_mansib = models.BooleanField(default=True, help_text='Show "Mansib" in footer credits')
     maintenance_mode = models.BooleanField(default=False, help_text='Enable to show a maintenance page to visitors.')
     meta_description = models.CharField(max_length=300, blank=True, default='Binco is Bangladesh\'s leading marketplace to buy and sell new and used items.')
     google_analytics_id = models.CharField(max_length=50, blank=True, help_text='e.g. G-XXXXXXXXXX')
+    whatsapp_number = models.CharField(max_length=30, blank=True, help_text="e.g. +8801700000000")
+    show_whatsapp_btn = models.BooleanField(default=True)
+    messenger_link = models.URLField(blank=True, help_text="e.g. https://m.me/yourpage")
+    show_messenger_btn = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = 'General Settings'
@@ -205,3 +211,59 @@ class SMSSettings(SingletonModel):
 
     def __str__(self):
         return f'SMS: {self.get_provider_display()}'
+
+# ────────────────────── WEBSITE STYLE SETTINGS ────────────────
+class WebsiteStyleSettings(SingletonModel):
+    HEADER_STYLES = [
+        ('header_1', 'Style One — Default'),
+        ('header_2', 'Style Two — Mega menu'),
+        ('header_3', 'Style Three — Minimal'),
+    ]
+    HERO_STYLES = [
+        ('hero_1', 'Style One — Default Slider'),
+        ('hero_2', 'Style Two — Slider + side panel'),
+        ('hero_3', 'Style Three — Grid slider'),
+    ]
+    PRODUCT_CARD_STYLES = [
+        ('card_1', 'Style One — Default'),
+        ('card_2', 'Style Two — Minimal'),
+        ('card_3', 'Style Three — Overlay'),
+    ]
+    FOOTER_STYLES = [
+        ('footer_1', 'Style One — Default Dark'),
+        ('footer_2', 'Style Two — Multi-column'),
+        ('footer_3', 'Style Three — Light minimal'),
+    ]
+    MOBILE_NAV_STYLES = [
+        ('mobnav_1', 'Style One — Flat bar'),
+        ('mobnav_2', 'Style Two — Curved floating cart'),
+    ]
+
+    header_style = models.CharField(max_length=20, choices=HEADER_STYLES, default='header_1')
+    hero_style = models.CharField(max_length=20, choices=HERO_STYLES, default='hero_1')
+    product_card_style = models.CharField(max_length=20, choices=PRODUCT_CARD_STYLES, default='card_1')
+    footer_style = models.CharField(max_length=20, choices=FOOTER_STYLES, default='footer_1')
+    mobile_nav_style = models.CharField(max_length=20, choices=MOBILE_NAV_STYLES, default='mobnav_1')
+
+    class Meta:
+        verbose_name = 'Website Style Settings'
+        verbose_name_plural = 'Website Style Settings'
+
+    def __str__(self):
+        return 'Website Styles'
+
+# ────────────────────── PROMO BANNER SETTINGS ────────────────
+class PromoBannerSettings(SingletonModel):
+    is_active = models.BooleanField(default=True, help_text="Show or hide the promo banner.")
+    bg_image = models.ImageField(upload_to='config/banners/', blank=True, null=True, help_text="Background image for the banner. Recommended size: 1920x400.")
+    watermark_text = models.CharField(max_length=50, default='EARRING')
+    subtitle = models.CharField(max_length=100, default='Upto 35% Discount')
+    title = models.CharField(max_length=100, default='Something New In Jewels')
+    description = models.CharField(max_length=200, default="22' Carat | 1 Year Warranty | Earrings")
+
+    class Meta:
+        verbose_name = 'Promo Banner Settings'
+        verbose_name_plural = 'Promo Banner Settings'
+
+    def __str__(self):
+        return 'Promo Banner Configuration'

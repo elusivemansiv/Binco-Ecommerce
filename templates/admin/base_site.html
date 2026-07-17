@@ -1,0 +1,78 @@
+{% extends "admin/base.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* Sidebar top-level app group headers */
+    .sidebar .sidebar-title-link {
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        text-transform: uppercase !important;
+        display: flex !important;
+        align-items: center !important;
+        letter-spacing: 0.3px !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    .sidebar .sidebar-title-link i.fas {
+        margin-right: 6px !important;
+        font-size: 12px !important;
+        width: 14px !important;
+        min-width: 14px !important;
+        text-align: center !important;
+        display: inline-block !important;
+    }
+    
+    .sidebar .sidebar-title-link span {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var icons = {
+        'catalog': 'fas fa-box',
+        'orders': 'fas fa-shopping-cart',
+        'cart & coupons': 'fas fa-ticket-alt',
+        'reviews': 'fas fa-star',
+        'wishlist': 'fas fa-heart',
+        'store settings': 'fas fa-store',
+        'accounts': 'fas fa-users',
+        'cms': 'fas fa-file-alt',
+        'reports & analytics': 'fas fa-chart-line',
+        'settings & configuration': 'fas fa-cogs',
+        'notifications': 'fas fa-bell'
+    };
+    
+    // Function to add icons
+    function addIcons() {
+        document.querySelectorAll('.sidebar-title-link').forEach(function(el) {
+            // Check if icon is already added to prevent duplicates
+            if (el.querySelector('.fas')) return;
+            
+            var text = el.textContent.trim();
+            var lowerText = text.toLowerCase();
+            if(icons[lowerText]) {
+                el.innerHTML = '<i class="' + icons[lowerText] + '"></i> <span>' + text + '</span>';
+            }
+        });
+    }
+
+    // Run initially
+    addIcons();
+
+    // Jet sometimes re-renders or toggles things, so let's observe changes just in case
+    var observer = new MutationObserver(function(mutations) {
+        addIcons();
+    });
+    
+    var sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        observer.observe(sidebar, { childList: true, subtree: true });
+    }
+});
+</script>
+{% endblock %}

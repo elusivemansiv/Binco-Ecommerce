@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Banner, Article, StaticPage, HomeSlider, PromotionCard
+from .models import Banner, Article, StaticPage, HomeSlider, PromotionCard, Testimonial
 
 
 @admin.register(HomeSlider)
@@ -24,8 +24,8 @@ class BannerAdmin(admin.ModelAdmin):
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'is_published', 'published_at')
-    list_filter = ('is_published', 'author')
+    list_display = ('title', 'category', 'author', 'is_published', 'published_at')
+    list_filter = ('category', 'is_published', 'author')
     search_fields = ('title', 'content')
     prepopulated_fields = {'slug': ('title',)}
 
@@ -35,3 +35,32 @@ class StaticPageAdmin(admin.ModelAdmin):
     list_filter = ('is_active',)
     search_fields = ('title', 'content')
     prepopulated_fields = {'slug': ('title',)}
+
+from .models import AboutPage, AboutStat, AboutService, AboutTeamMember
+
+class AboutStatInline(admin.TabularInline):
+    model = AboutStat
+    extra = 1
+
+class AboutServiceInline(admin.StackedInline):
+    model = AboutService
+    extra = 1
+
+class AboutTeamMemberInline(admin.StackedInline):
+    model = AboutTeamMember
+    extra = 1
+
+@admin.register(AboutPage)
+class AboutPageAdmin(admin.ModelAdmin):
+    inlines = [AboutStatInline, AboutServiceInline, AboutTeamMemberInline]
+
+    def has_add_permission(self, request):
+        if AboutPage.objects.exists():
+            return False
+        return True
+
+@admin.register(Testimonial)
+class TestimonialAdmin(admin.ModelAdmin):
+    list_display = ('customer_name', 'customer_role', 'is_active', 'created_at')
+    list_editable = ('is_active',)
+    search_fields = ('customer_name', 'customer_role', 'review_text')

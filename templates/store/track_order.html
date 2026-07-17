@@ -1,0 +1,59 @@
+{% extends 'layout.html' %}
+{% block title %}Order Tracking{% endblock %}
+
+{% block content %}
+<div class="tracking-page py-5">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="mb-4">
+            <span class="text-muted"><a href="{% url 'home' %}">Home</a> &gt; Order Tracking</span>
+            <h2 class="fw-bold mt-2 text-dark">Order Tracking</h2>
+        </div>
+
+        <div class="bg-white p-5 rounded">
+            <p class="mb-5 text-muted">To track your order please enter your Order ID in the box below and press the "Track" button. This was given to you on your receipt and in the confirmation email you should have received.</p>
+            
+            <form action="#" method="GET" class="tracking-form">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="fw-bold mb-2 text-dark">Order ID</label>
+                        <input type="text" class="form-control tracking-input" placeholder="Found in your order confirmation email.">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-bold mb-2 text-dark">Billing email</label>
+                        <input type="email" class="form-control tracking-input" placeholder="Email you used during checkout.">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-shop-orange px-5 py-2 text-uppercase fw-bold rounded-1">Track</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.tracking-page {
+    background-color: #f4f5f7;
+    min-height: 60vh;
+}
+.tracking-input {
+    border-radius: 4px;
+    padding: 12px 15px;
+    border: 1px solid var(--border);
+}
+.tracking-input:focus {
+    box-shadow: none;
+    border-color: var(--accent);
+}
+.btn-shop-orange {
+    background-color: var(--accent);
+    color: #fff;
+    border: none;
+}
+.btn-shop-orange:hover {
+    background-color: var(--accent-dark);
+    color: #fff;
+}
+</style>
+{% endblock %}

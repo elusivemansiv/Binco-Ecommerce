@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     GeneralSettings, CurrencyTaxSettings,
-    PaymentGatewaySettings, EmailSettings, SMSSettings
+    PaymentGatewaySettings, EmailSettings, SMSSettings,
+    WebsiteStyleSettings, PromoBannerSettings
 )
 
 
@@ -42,7 +43,7 @@ class GeneralSettingsAdmin(SingletonAdmin):
             'classes': ('collapse',),
         }),
         ('Display', {
-            'fields': ('footer_text', 'maintenance_mode'),
+            'fields': ('footer_text', 'show_developer_stradigtech', 'show_developer_mansib', 'maintenance_mode'),
         }),
     )
 
@@ -122,3 +123,13 @@ class SMSSettingsAdmin(SingletonAdmin):
             'fields': ('send_order_sms', 'send_shipping_sms', 'send_otp_sms'),
         }),
     )
+
+@admin.register(WebsiteStyleSettings)
+class WebsiteStyleSettingsAdmin(SingletonAdmin):
+    pass
+
+
+
+@admin.register(PromoBannerSettings)
+class PromoBannerSettingsAdmin(admin.ModelAdmin):
+    list_display = ('title', 'is_active')

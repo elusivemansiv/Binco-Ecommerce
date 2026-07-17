@@ -1,0 +1,25 @@
+{% if header_cart_items %}
+<div class="dropdown-item-list">
+    {% for item in header_cart_items %}
+    <div class="dropdown-item-row position-relative">
+        {% if item.product.image %}
+        <img src="{{ item.product.image.url }}" class="dropdown-item-img" alt="{{ item.product.name }}">
+        {% else %}
+        <div class="dropdown-item-img bg-light"></div>
+        {% endif %}
+        <div class="dropdown-item-info pe-4">
+            <h6><a href="{% url 'product_detail' item.product.id %}" class="text-decoration-none text-dark">{{ item.product.name }}</a></h6>
+            <div class="dropdown-item-price">{{ item.quantity }} x ৳{{ item.product.price }}</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-link text-danger position-absolute end-0 top-50 translate-middle-y ajax-remove-cart" data-item-id="{{ item.id }}" title="Remove item" style="padding: 0 5px;">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+<div class="mt-3 text-center">
+    <a href="{% url 'cart' %}" class="btn btn-primary w-100 btn-sm">View Cart</a>
+</div>
+{% else %}
+<div class="text-center py-3 text-muted">Your cart is empty.</div>
+{% endif %}

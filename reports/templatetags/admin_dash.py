@@ -2,7 +2,8 @@ from django import template
 from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import timedelta
-from store.models import Order, Product, OrderItem, Category
+from orders.models import Order, OrderItem
+from catalog.models import Product, Category
 from django.contrib.auth.models import User
 import json
 

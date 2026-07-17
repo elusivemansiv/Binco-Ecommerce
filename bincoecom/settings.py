@@ -1,3 +1,4 @@
+from django.utils.safestring import mark_safe
 """
 Django settings for bincoecom project.
 """
@@ -26,6 +27,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'store',
+    'catalog',
+    'cart',
+    'orders',
+    'reviews',
+    'wishlist',
+    'seller',
     'accounts',
     'cms',
     'reports',
@@ -57,6 +64,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'store.context_processors.cart_count',
+                'store.context_processors.wishlist_count',
                 'store.context_processors.categories',
                 'store.context_processors.shipping_config',
                 'siteconfig.context_processors.site_settings',
@@ -109,42 +117,76 @@ LOGOUT_REDIRECT_URL = 'home'
 # Django Jet Reboot Configuration
 # ---------------------------------
 JET_DEFAULT_THEME = 'default'
-JET_SIDE_MENU_COMPACT = False
+JET_SIDE_MENU_COMPACT = True
 JET_CHANGE_FORM_SIBLING_LINKS = True
 
 JET_SIDE_MENU_ITEMS = [
-    {'label': 'Store', 'items': [
-        {'name': 'store.product', 'label': 'Products'},
-        {'name': 'store.category', 'label': 'Categories'},
-        {'name': 'store.order', 'label': 'Orders'},
-        {'name': 'store.orderitem', 'label': 'Order Items'},
+    {'label': 'Catalog', 'app_label': 'catalog', 'items': [
+        {'name': 'catalog.product', 'label': 'Products'},
+        {'name': 'catalog.category', 'label': 'Categories'},
+        {'name': 'catalog.color', 'label': 'Colors'},
+        {'name': 'catalog.size', 'label': 'Sizes'},
+    ]},
+    {'label': 'Orders', 'app_label': 'orders', 'items': [
+        {'name': 'orders.order', 'label': 'Orders'},
+    ]},
+    {'label': 'Cart & Coupons', 'app_label': 'cart', 'items': [
+        {'name': 'cart.cart', 'label': 'Carts'},
+        {'name': 'cart.coupon', 'label': 'Coupons'},
+    ]},
+    {'label': 'Reviews', 'app_label': 'reviews', 'items': [
+        {'name': 'reviews.productreview', 'label': 'Product Reviews'},
+    ]},
+    {'label': 'Wishlist', 'app_label': 'wishlist', 'items': [
+        {'name': 'wishlist.wishlist', 'label': 'Wishlists'},
+    ]},
+    {'label': 'Store Settings', 'app_label': 'store', 'items': [
         {'name': 'store.shippingconfig', 'label': 'Shipping Settings'},
     ]},
-    {'label': 'Accounts', 'items': [
+    {'label': 'Accounts', 'app_label': 'auth', 'items': [
         {'name': 'auth.user', 'label': 'Users'},
         {'name': 'auth.group', 'label': 'Groups'},
+        {'name': 'accounts.userprofile', 'label': 'User Profiles / Sellers'},
     ]},
-    {'label': 'CMS', 'items': [
+    {'label': 'CMS', 'app_label': 'cms', 'items': [
         {'name': 'cms.homeslider', 'label': 'Homepage Sliders'},
         {'name': 'cms.promotioncard', 'label': 'Promotion Cards'},
         {'name': 'cms.banner', 'label': 'Banners'},
         {'name': 'cms.article', 'label': 'Blog Articles'},
         {'name': 'cms.staticpage', 'label': 'Static Pages'},
+        {'name': 'cms.aboutpage', 'label': 'About Page'},
+        {'name': 'cms.testimonial', 'label': 'Testimonials'},
     ]},
-    {'label': 'Reports & Analytics', 'items': [
+    {'label': 'Reports & Analytics', 'app_label': 'reports', 'items': [
         {'url': '/admin/reports/', 'label': 'Analytics Dashboard'},
         {'name': 'reports.expense', 'label': 'Expense Tracking'},
     ]},
-    {'label': 'Settings & Configuration', 'items': [
+    {'label': 'Settings & Configuration', 'app_label': 'siteconfig', 'items': [
         {'name': 'siteconfig.generalsettings', 'label': 'General Settings'},
         {'name': 'siteconfig.currencytaxsettings', 'label': 'Currency & Tax'},
         {'name': 'siteconfig.paymentgatewaysettings', 'label': 'Payment Gateways'},
         {'name': 'siteconfig.emailsettings', 'label': 'Email Configuration'},
         {'name': 'siteconfig.smssettings', 'label': 'SMS Configuration'},
+        {'name': 'siteconfig.websitestylesettings', 'label': 'Website Style Settings'},
+        {'name': 'siteconfig.promobannersettings', 'label': 'Promo Banner Settings'},
     ]},
-    {'label': 'Notifications', 'items': [
+    {'label': 'Notifications', 'app_label': 'notifications', 'items': [
         {'name': 'notifications.notification', 'label': 'Notification Log'},
         {'name': 'notifications.notificationtemplate', 'label': 'Templates'},
         {'name': 'notifications.pushsubscription', 'label': 'Push Subscriptions'},
     ]},
+]
+
+JET_SIDE_MENU_CUSTOM_APPS = [
+    ('catalog', {'icon': 'fas fa-box'}),
+    ('orders', {'icon': 'fas fa-shopping-cart'}),
+    ('cart', {'icon': 'fas fa-ticket-alt'}),
+    ('reviews', {'icon': 'fas fa-star'}),
+    ('wishlist', {'icon': 'fas fa-heart'}),
+    ('store', {'icon': 'fas fa-store'}),
+    ('auth', {'icon': 'fas fa-users'}),
+    ('cms', {'icon': 'fas fa-file-alt'}),
+    ('reports', {'icon': 'fas fa-chart-line'}),
+    ('siteconfig', {'icon': 'fas fa-cogs'}),
+    ('notifications', {'icon': 'fas fa-bell'}),
 ]
