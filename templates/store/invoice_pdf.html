@@ -6,176 +6,194 @@
     <style>
         @page {
             size: a4 portrait;
-            @frame content_frame {
-                left: 50pt; width: 492pt; top: 50pt; height: 742pt;
-            }
+            margin: 1cm;
         }
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 11pt;
+            font-size: 10pt;
             color: #333;
             line-height: 1.4;
         }
-        .header {
-            text-align: right;
-            border-bottom: 2px solid #0064d2;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            color: #0064d2;
-            margin: 0;
-            font-size: 28pt;
-        }
-        .company-info {
-            float: left;
-            text-align: left;
-        }
-        .invoice-details {
-            float: right;
-            text-align: right;
-        }
-        .section {
-            clear: both;
-            margin-bottom: 30px;
-        }
-        .bill-to {
-            width: 45%;
-            float: left;
-        }
-        .ship-to {
-            width: 45%;
-            float: right;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-            padding: 10px;
-            text-align: left;
+        .company-logo-text {
+            background-color: white;
+            color: #0738d8;
+            padding: 8px 12px;
             font-weight: bold;
+            font-size: 16pt;
+            display: inline-block;
+            margin-bottom: 10px;
         }
-        td {
-            padding: 10px;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .totals {
-            float: right;
-            width: 35%;
-            margin-top: 20px;
-        }
-        .total-row {
+        .label {
+            color: #999;
+            font-size: 8pt;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             margin-bottom: 5px;
         }
-        .grand-total {
-            font-size: 14pt;
+        .table-th {
+            border-bottom: 2px solid #eee;
+            color: #999;
+            font-size: 8pt;
             font-weight: bold;
-            color: #0064d2;
-            border-top: 2px solid #0064d2;
+            letter-spacing: 1px;
+            text-transform: uppercase;
             padding-top: 10px;
-            margin-top: 10px;
+            padding-bottom: 10px;
+            padding-left: 5px;
+            padding-right: 5px;
         }
-        .footer {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 9pt;
-            color: #777;
-            border-top: 1px solid #ddd;
+        .table-td {
+            border-bottom: 1px solid #eee;
             padding-top: 10px;
+            padding-bottom: 10px;
+            padding-left: 5px;
+            padding-right: 5px;
+            color: #333;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="company-info">
-            <h2 style="color: #0064d2; margin: 0;">Binco Ecommerce</h2>
-            <p style="margin: 0;">Dhaka, Bangladesh</p>
-            <p style="margin: 0;">support@binco.com</p>
-        </div>
-        <div class="invoice-details">
-            <h1>INVOICE</h1>
-            <p style="margin: 0;"><strong>Invoice ID:</strong> #{{ order.id }}</p>
-            <p style="margin: 0;"><strong>Date:</strong> {{ order.created_at|date:"F d, Y" }}</p>
-            <p style="margin: 0;"><strong>Status:</strong> {{ order.get_status_display }}</p>
-        </div>
-    </div>
-
-    <div class="section">
-        <div class="bill-to">
-            <h3 style="color: #0064d2; border-bottom: 1px solid #eee;">Bill To:</h3>
-            <p><strong>{{ order.full_name }}</strong><br>
-            {{ order.email }}<br>
-            {{ order.phone }}</p>
-        </div>
-        <div class="ship-to">
-            <h3 style="color: #0064d2; border-bottom: 1px solid #eee;">Ship To:</h3>
-            <p>{{ order.address }}<br>
-            {{ order.city }} - {{ order.postal_code }}<br>
-            Bangladesh</p>
-        </div>
-    </div>
-
-    <div class="section">
-        <table>
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th style="text-align: center;">Price</th>
-                    <th style="text-align: center;">Qty</th>
-                    <th style="text-align: right;">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in order.items.all %}
-                <tr>
-                    <td>
-                        {{ item.product_name }}
-                        {% if item.variation_name %}
-                        <br><small style="color: #666;">({{ item.variation_name }})</small>
-                        {% endif %}
-                    </td>
-                    <td style="text-align: center;">৳{{ item.price }}</td>
-                    <td style="text-align: center;">{{ item.quantity }}</td>
-                    <td style="text-align: right;">৳{{ item.subtotal }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="totals">
-        <div class="total-row">
-            <span style="float: left;">Subtotal:</span>
-            <span style="float: right;">৳{{ order.get_items_total }}</span>
-        </div>
-        {% if order.discount_amount > 0 %}
-        <div class="total-row" style="color: #28a745;">
-            <span style="float: left;">Discount:</span>
-            <span style="float: right;">-৳{{ order.discount_amount }}</span>
-        </div>
-        {% endif %}
-        <div class="total-row">
-            <span style="float: left;">Shipping:</span>
-            <span style="float: right;">{% if order.shipping_charge > 0 %}৳{{ order.shipping_charge }}{% else %}Free{% endif %}</span>
-        </div>
-        <div class="grand-total">
-            <span style="float: left;">Grand Total:</span>
-            <span style="float: right;">৳{{ order.total_price }}</span>
-        </div>
-        <div style="clear: both; margin-top: 15px; text-align: right;">
-            <p style="font-size: 9pt;"><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
-        </div>
-    </div>
-
-    <div class="footer">
-        <p>Thank you for shopping with Binco Ecommerce!</p>
-        <p>This is a computer-generated invoice and doesn't require a signature.</p>
-    </div>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#0738d8" style="margin-bottom: 30px;">
+        <tr>
+            <td width="60%" valign="top" style="padding: 20px; color: #ffffff; line-height: 1.6;">
+                <div class="company-logo-text">BINCO</div><br>
+                Dhaka, Bangladesh<br>
+                support@binco.com<br>
+                Date: {{ order.created_at|date:"M d, Y" }}
+            </td>
+            <td width="40%" align="right" valign="top" style="padding: 20px;">
+                <h1 style="color: #ffffff; font-size: 26pt; margin: 0; margin-bottom: 5px; letter-spacing: 2px; font-weight: bold;">INVOICE</h1>
+                <p style="margin: 0; margin-bottom: 10px; font-size: 11pt; color: #e0e0e0;">INV-2026-{{ order.id|stringformat:"05d" }}</p>
+                <div>
+                    <span style="background-color: #3949ab; color: #ffffff; padding-top: 5px; padding-bottom: 5px; padding-left: 15px; padding-right: 15px; font-size: 9pt; font-weight: bold;">
+                        &nbsp;&#10003;&nbsp;&nbsp;{{ order.get_status_display|upper }}&nbsp;
+                    </span>
+                </div>
+            </td>
+        </tr>
+    </table>
+    
+    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="20"></td>
+            <td valign="top">
+                <!-- From and Bill To section -->
+                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                    <tr>
+                        <td width="48%" valign="top">
+                            <div class="label">FROM</div>
+                            <h3 style="font-size: 13pt; margin: 0; margin-bottom: 8px; color: #222;">Binco Ecommerce</h3>
+                            <p style="margin: 0; color: #666; line-height: 1.5; font-size: 10pt;">
+                                Dhaka, Bangladesh<br>
+                                Email: support@binco.com<br>
+                            </p>
+                        </td>
+                        <td width="4%">&nbsp;</td>
+                        <td width="48%" valign="top">
+                            <div class="label">BILL TO</div>
+                            <h3 style="font-size: 13pt; margin: 0; margin-bottom: 8px; color: #222;">{{ order.full_name }}</h3>
+                            <p style="margin: 0; color: #666; line-height: 1.5; font-size: 10pt;">
+                                {{ order.email }}<br>
+                                {{ order.phone }}<br>
+                                {{ order.address }}, {{ order.city }} - {{ order.postal_code }}<br>
+                                Bangladesh
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Items Table -->
+                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th align="left" class="table-th" width="5%">#</th>
+                            <th align="left" class="table-th" width="45%">DESCRIPTION</th>
+                            <th align="center" class="table-th" width="10%">QTY</th>
+                            <th align="right" class="table-th" width="20%">RATE</th>
+                            <th align="right" class="table-th" width="20%">AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td align="left" class="table-td" valign="top">{{ forloop.counter }}</td>
+                            <td align="left" class="table-td" valign="top">
+                                {{ item.product_name }}
+                                {% if item.variation_name %}
+                                <br><small style="color: #888;">{{ item.variation_name }}</small>
+                                {% endif %}
+                            </td>
+                            <td align="center" class="table-td" valign="top" style="font-weight: bold;">{{ item.quantity }}</td>
+                            <td align="right" class="table-td" valign="top" style="font-weight: bold;">Tk. {{ item.price|floatformat:2 }}</td>
+                            <td align="right" class="table-td" valign="top" style="font-weight: bold;">Tk. {{ item.subtotal|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <!-- Totals -->
+                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                    <tr>
+                        <td width="50%" valign="top">
+                            <div style="margin-top: 15px; color: #888; font-size: 9pt;">
+                                <strong>Payment Method:</strong><br>
+                                {{ order.get_payment_method_display }}
+                            </div>
+                        </td>
+                        <td width="50%" valign="top">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="left" style="color: #666; padding-top: 8px; padding-bottom: 8px;">Subtotal</td>
+                                    <td align="right" style="font-weight: bold; color: #333; padding-top: 8px; padding-bottom: 8px;">Tk. {{ order.get_items_total|floatformat:2 }}</td>
+                                </tr>
+                                {% if order.discount_amount > 0 %}
+                                <tr>
+                                    <td align="left" style="color: #666; padding-top: 8px; padding-bottom: 8px;">Discount</td>
+                                    <td align="right" style="font-weight: bold; color: #28a745; padding-top: 8px; padding-bottom: 8px;">-Tk. {{ order.discount_amount|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td align="left" style="color: #666; border-bottom: 2px solid #eee; padding-top: 8px; padding-bottom: 12px;">Shipping</td>
+                                    <td align="right" style="font-weight: bold; color: #333; border-bottom: 2px solid #eee; padding-top: 8px; padding-bottom: 12px;">{% if order.shipping_charge > 0 %}Tk. {{ order.shipping_charge|floatformat:2 }}{% else %}Free{% endif %}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td width="20"></td>
+        </tr>
+    </table>
+    
+    <!-- Grand Total Box -->
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#0738d8">
+        <tr>
+            <td align="left" valign="middle" style="color: #ffffff; font-size: 13pt; font-weight: bold; letter-spacing: 1px; padding-top: 15px; padding-bottom: 15px; padding-left: 20px; padding-right: 20px;">
+                TOTAL AMOUNT
+            </td>
+            <td align="right" valign="middle" style="color: #ffffff; font-size: 18pt; font-weight: bold; padding-top: 15px; padding-bottom: 15px; padding-left: 20px; padding-right: 20px;">
+                Tk. {{ order.total_price|floatformat:2 }}
+            </td>
+        </tr>
+    </table>
+    
+    <br>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="20"></td>
+            <td valign="top">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td align="center" style="padding: 15px; border: 1px solid #eee; background-color: #fcfcfc; color: #888; font-size: 9pt;">
+                            Thank you for shopping with Binco Ecommerce!<br>
+                            <span style="font-size: 8pt; color: #aaa;">This is a computer-generated invoice and doesn't require a signature.</span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td width="20"></td>
+        </tr>
+    </table>
 </body>
 </html>
