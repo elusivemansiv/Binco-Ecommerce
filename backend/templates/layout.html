@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Binco - Buy & Sell Everything{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Binco is Bangladesh's leading marketplace to buy and sell new and used items.{% endblock %}">
+    
+    <!-- Favicon -->
+    {% load static %}
+    {% if site_settings and site_settings.favicon %}
+        <link rel="icon" type="image/png" href="{{ site_settings.favicon.url }}">
+    {% else %}
+        <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    {% endif %}
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2.3">
+    <link rel="stylesheet" href="{% static 'css/theme-redesign.css' %}?v=2.3">
+    <style>
+        /* Notification Dropdown */
+        .notif-bell-wrap { position: relative; }
+        .notif-dropdown {
+            position: absolute; top: calc(100% + 12px); right: -20px;
+            width: 360px; background: #fff; border-radius: 14px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+            border: 1px solid #eee; z-index: 3000;
+            overflow: hidden; animation: notifSlideIn 0.2s ease;
+        }
+        @keyframes notifSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notif-dropdown-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 18px; border-bottom: 1px solid #f0f0f0;
+        }
+        .notif-dropdown-header strong { font-size: 0.95rem; color: #1a1a2e; }
+        .notif-dropdown-header a {
+            font-size: 0.78rem; color: var(--primary, #4361ee);
+            text-decoration: none; font-weight: 600;
+        }
+        .notif-dropdown-body { max-height: 340px; overflow-y: auto; }
+        .notif-dropdown-item {
+            display: flex; gap: 12px; padding: 12px 18px;
+            border-bottom: 1px solid #f8f8f8; text-decoration: none;
+            color: inherit; transition: background 0.15s; cursor: pointer;
+        }
+        .notif-dropdown-item:hover { background: #f7f8fc; }
+        .notif-dropdown-item.unread { background: #f0f4ff; }
+        .notif-dropdown-item .nd-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: #e8f0fe; color: var(--primary, #4361ee);
+            font-size: 0.85rem; flex-shrink: 0;
+        }
+        .notif-dropdown-item .nd-content { flex: 1; min-width: 0; }
+        .notif-dropdown-item .nd-content h5 {
+            font-size: 0.82rem; font-weight: 600; margin: 0 0 2px;
+            color: #1a1a2e; line-height: 1.3;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .notif-dropdown-item .nd-content p {
+            font-size: 0.75rem; color: #888; margin: 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .notif-dropdown-item .nd-time {
+            font-size: 0.7rem; color: #aaa; white-space: nowrap;
+            margin-top: 2px;
+        }
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+        }
+        .notif-dropdown-footer {
+            display: block; text-align: center; padding: 12px;
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--primary, #4361ee); text-decoration: none;
+            border-top: 1px solid #f0f0f0; background: #fafbff;
+        }
+        .notif-dropdown-footer:hover { background: #f0f4ff; }
+        .notif-dropdown-empty {
+            text-align: center; padding: 30px 20px;
+            color: #aaa; font-size: 0.85rem;
+        }
+        .notif-badge {
+            background: #ef4444 !important;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% with header_tpl="partials/headers/"|add:style_settings.header_style|add:".html" %}
+    {% include header_tpl %}
+{% endwith %}
+<div id="header-spacer"></div>
+<script>
+    (function() {
+        var hw = document.querySelector('.sticky-header-wrapper');
+        var sp = document.getElementById('header-spacer');
+        if (hw && sp) {
+            sp.style.height = hw.offsetHeight + 'px';
+            window.addEventListener('resize', function() {
+                sp.style.height = hw.offsetHeight + 'px';
+            });
+        }
+    })();
+</script>
+
+
+
+<!-- ========== TOAST NOTIFICATIONS ========== -->
+<div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 2000;"></div>
+
+<!-- ========== MESSAGES ========== -->
+{% if messages %}
+<div class="container mt-3" id="django-messages">
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- ========== MAIN CONTENT ========== -->
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+{% with footer_tpl="partials/footers/"|add:style_settings.footer_style|add:".html" %}
+    {% include footer_tpl %}
+{% endwith %}
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const id = 'toast-' + Date.now();
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const color = type === 'success' ? 'var(--success)' : 'var(--danger)';
+        
+        const toastHtml = `
+            <div id="${id}" class="toast show animate__animated animate__fadeInUp" role="alert" aria-live="assertive" aria-atomic="true" style="background: #fff; border-left: 5px solid ${color}; min-width: 250px; border-radius: 8px; box-shadow: var(--shadow-hover);">
+                <div class="toast-body d-flex align-items-center gap-2 p-3">
+                    <i class="fas ${icon}" style="color: ${color}; font-size: 1.2rem;"></i>
+                    <div class="flex-grow-1 fw-medium" style="color: var(--text); font-size: 14px;">${message}</div>
+                    <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        
+        const toastElement = document.getElementById(id);
+        setTimeout(() => {
+            if (toastElement) {
+                toastElement.classList.replace('animate__fadeInUp', 'animate__fadeOutDown');
+                setTimeout(() => toastElement.remove(), 500);
+            }
+        }, 4000);
+    }
+
+    function updateCartBadge(count) {
+        let badge = document.querySelector('.cart-badge');
+        if (count > 0) {
+            if (!badge) {
+                const iconWrap = document.querySelector('.cart-icon-wrap');
+                badge = document.createElement('span');
+                badge.className = 'cart-badge';
+                iconWrap.appendChild(badge);
+            }
+            badge.innerText = count;
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+
+    // Auto-hide Django alerts & Global Add to Cart
+    document.addEventListener('DOMContentLoaded', function() {
+        // Django Alerts
+        const alerts = document.querySelectorAll('#django-messages .alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+
+        // Global AJAX Add to Cart (for links like in home.html, product_list.html)
+        const addToCartLinks = document.querySelectorAll('a[href*="/cart/add/"]');
+        addToCartLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.href;
+                const originalHtml = this.innerHTML;
+                
+                this.style.pointerEvents = 'none';
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+                
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return null;
+                    }
+                    if (!response.ok) throw new Error('Network response not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    if (data.status === 'success') {
+                        if (typeof showToast === 'function') showToast(data.message);
+                        if (typeof updateCartBadge === 'function') updateCartBadge(data.cart_count);
+                    } else {
+                        if (typeof showToast === 'function') showToast(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (typeof showToast === 'function') showToast('Something went wrong. Please try again.', 'error');
+                })
+                .finally(() => {
+                    this.style.pointerEvents = 'auto';
+                    this.innerHTML = originalHtml;
+                });
+            });
+        });
+    });
+
+    function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // ─── Notification Dropdown ───
+    let notifDropdownOpen = false;
+
+    function toggleNotifDropdown(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const dd = document.getElementById('notifDropdown');
+        if (!dd) return;
+
+        notifDropdownOpen = !notifDropdownOpen;
+        dd.style.display = notifDropdownOpen ? 'block' : 'none';
+
+        if (notifDropdownOpen) {
+            loadNotifDropdown();
+        }
+    }
+
+    function loadNotifDropdown() {
+        fetch('/notifications/dropdown/', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            const body = document.getElementById('notifDropdownBody');
+            if (!data.notifications || data.notifications.length === 0) {
+                body.innerHTML = '<div class="notif-dropdown-empty"><i class="fas fa-bell-slash"></i><br>No notifications yet</div>';
+                return;
+            }
+            let html = '';
+            data.notifications.forEach(n => {
+                const link = n.link || '/notifications/';
+                html += `
+                    <div class="notif-dropdown-item ${n.is_read ? '' : 'unread'}"
+                         onclick="window.location.href='${link}'">
+                        <div class="nd-icon"><i class="fas ${n.icon || 'fa-bell'}"></i></div>
+                        <div class="nd-content">
+                            <h5>${n.title}</h5>
+                            <p>${n.message}</p>
+                        </div>
+                        <span class="nd-time">${n.time_ago}</span>
+                    </div>`;
+            });
+            body.innerHTML = html;
+        })
+        .catch(() => {
+            document.getElementById('notifDropdownBody').innerHTML =
+                '<div class="notif-dropdown-empty">Failed to load</div>';
+        });
+    }
+
+    function markAllReadNav(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        fetch('/notifications/mark-all-read/', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(() => {
+            document.querySelectorAll('.notif-dropdown-item.unread').forEach(el => el.classList.remove('unread'));
+            const badge = document.querySelector('.notif-badge');
+            if (badge) badge.remove();
+        });
+    }
+
+    // Close dropdown on outside click
+    document.addEventListener('click', function(e) {
+        const wrap = document.getElementById('notifBellWrap');
+        const dd = document.getElementById('notifDropdown');
+        if (dd && wrap && !wrap.contains(e.target)) {
+            dd.style.display = 'none';
+            notifDropdownOpen = false;
+        }
+    });
+
+    // Poll notification count every 60s
+    setInterval(() => {
+        fetch('/notifications/count/', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            let badge = document.querySelector('.notif-badge');
+            if (data.count > 0) {
+                if (!badge) {
+                    const iconWrap = document.querySelector('.notif-bell-wrap .cart-icon-wrap');
+                    if (iconWrap) {
+                        badge = document.createElement('span');
+                        badge.className = 'cart-badge notif-badge';
+                        iconWrap.appendChild(badge);
+                    }
+                }
+                if (badge) badge.innerText = data.count;
+            } else if (badge) {
+                badge.remove();
+            }
+        }).catch(() => {});
+    }, 60000);
+
+    // Mobile Menu Toggle Logic
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const closeSidebar = document.getElementById('closeSidebar');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    if (mobileMenuBtn && mobileSidebar && mobileOverlay) {
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileSidebar.classList.add('active');
+            mobileOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        const hideSidebar = () => {
+            mobileSidebar.classList.remove('active');
+            mobileOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        closeSidebar.addEventListener('click', hideSidebar);
+        mobileOverlay.addEventListener('click', hideSidebar);
+    }
+</script>
+{% block extra_js %}{% endblock %}
+
+{% with mobnav_tpl="partials/mobile_nav/"|add:style_settings.mobile_nav_style|add:".html" %}
+    {% include mobnav_tpl %}
+{% endwith %}
+
+<!-- Floating Action Buttons -->
+<div class="floating-action-buttons">
+    {% if site_settings.show_whatsapp_btn and site_settings.whatsapp_number %}
+    <a href="https://wa.me/{{ site_settings.whatsapp_number|urlencode }}" class="fab-btn fab-whatsapp" title="WhatsApp" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+    {% endif %}
+    {% if site_settings.show_messenger_btn and site_settings.messenger_link %}
+    <a href="{{ site_settings.messenger_link }}" class="fab-btn fab-messenger" title="Messenger" target="_blank">
+        <i class="fab fa-facebook-messenger"></i>
+    </a>
+    {% endif %}
+    <button id="scrollToTopBtn" class="fab-btn fab-top" title="Go to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+</div>
+
+<script>
+    const scrollToTopBtn = document.getElementById("scrollToTopBtn");
+    
+    // Show button when scrolled down 300px
+    window.addEventListener("scroll", () => {
+        if (window.scrollY > 300) {
+            scrollToTopBtn.classList.add("show");
+        } else {
+            scrollToTopBtn.classList.remove("show");
+        }
+    });
+
+    // Scroll to top on click
+    scrollToTopBtn.addEventListener("click", () => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
+</script>
+
+<script src="{% static 'js/ajax_cart.js' %}?v=2.2"></script>
+</body>
+</html>

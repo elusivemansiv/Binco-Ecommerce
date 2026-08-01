@@ -1,0 +1,105 @@
+{% load static %}
+<!-- ========== FOOTER ========== -->
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo"><span class="logo-bi">Bin</span><span class="logo-nco">co</span></div>
+                <p>Bangladesh's trusted marketplace to buy and sell everything.</p>
+                <div class="social-links mb-4">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+                <p class="mb-2" style="font-size: 13px; font-weight: 700; color: #fff;">Download Our App:</p>
+                <div class="d-flex flex-row gap-2">
+                    <a href="#" class="d-inline-block transition-hover" style="transition: transform 0.2s; transform-origin: left;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" style="height: 36px; width: auto !important; object-fit: contain !important; display: inline-block;">
+                    </a>
+                    <a href="#" class="d-inline-block transition-hover" style="transition: transform 0.2s; transform-origin: left;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="Download on the App Store" style="height: 36px; width: auto !important; object-fit: contain !important; display: inline-block;">
+                    </a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Shop</h4>
+                <ul>
+                    <li><a href="{% url 'product_list' %}">All Products</a></li>
+                    <li><a href="{% url 'product_list' %}?sort=price_asc">Best Deals</a></li>
+                    {% for cat in all_categories|slice:":5" %}
+                    <li><a href="{% url 'product_list' %}?category={{ cat.slug }}">{{ cat.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Account</h4>
+                <ul>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'dashboard' %}">My Dashboard</a></li>
+                    <li><a href="{% url 'order_history' %}">My Orders</a></li>
+                    <li><a href="{% url 'wishlist' %}">Wishlist</a></li>
+                    <li><a href="{% url 'profile_edit' %}">Edit Profile</a></li>
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                    {% else %}
+                    <li><a href="{% url 'login' %}">Sign In</a></li>
+                    <li><a href="{% url 'register' %}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Sell</h4>
+                <ul>
+                    {% if user.is_authenticated and user.profile.is_seller %}
+                    <li><a href="{% url 'seller_dashboard' %}">Seller Dashboard</a></li>
+                    <li><a href="{% url 'add_product' %}">List a Product</a></li>
+                    {% elif user.is_authenticated and user.profile.is_seller_pending %}
+                    <li><span class="text-warning"><i class="fas fa-clock"></i> Seller Approval Pending</span></li>
+                    {% else %}
+                    <li><a href="{% url 'become_seller' %}">Become a Seller</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="{% url 'article_list' %}">Our Blog</a></li>
+                    <li><a href="{% url 'about_us' %}">About Us</a></li>
+                    <li><a href="{% url 'contact_us' %}">Contact Us</a></li>
+                    <li><a href="{% url 'privacy_policy' %}">Privacy Policy</a></li>
+                </ul>
+                <h4>Help</h4>
+                <ul>
+                    <li><i class="fas fa-envelope me-1"></i> support@binco.com</li>
+                    <li><i class="fas fa-phone me-1"></i> +880 1700-000000</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>
+                <p class="mb-1">&copy; 2026 Binco Ecommerce. All rights reserved.</p>
+                {% if site_settings.show_developer_stradigtech or site_settings.show_developer_mansib %}
+                <p class="mb-0" style="font-size: 12px; color: #6b7280;">
+                    Developed by 
+                    {% if site_settings.show_developer_stradigtech %}
+                    <a class="text-decoration-none" style="color: #60a5fa; font-weight: 500;" href="https://stradigtech.com/">StradigTech</a>
+                    {% endif %}
+                    {% if site_settings.show_developer_stradigtech and site_settings.show_developer_mansib %} | {% endif %}
+                    {% if site_settings.show_developer_mansib %}
+                    <a class="text-decoration-none" style="color: #60a5fa; font-weight: 500;" href="https://mansibahsan.netlify.app/">Mansib</a>
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+            <div class="payment-badges d-flex gap-2 align-items-center">
+                <img src="{% static 'images/payments/bkash.png' %}" alt="bKash" style="height: 28px; width: auto; border-radius: 4px; background: white; padding: 2px;">
+                <img src="{% static 'images/payments/nagad.png' %}" alt="Nagad" style="height: 28px; width: auto; border-radius: 4px; background: white; padding: 2px;">
+                <img src="{% static 'images/payments/visa.svg' %}" alt="Visa" style="height: 28px; width: auto; border-radius: 4px; background: white; padding: 2px;">
+                <img src="{% static 'images/payments/mastercard.svg' %}" alt="Mastercard" style="height: 28px; width: auto; border-radius: 4px; background: white; padding: 2px;">
+                <img src="{% static 'images/payments/amex.svg' %}" alt="Amex" style="height: 28px; width: auto; border-radius: 4px; background: white; padding: 2px;">
+                <img src="{% static 'images/payments/paypal.svg' %}" alt="PayPal" style="height: 28px; width: auto; border-radius: 4px; background: white; padding: 2px;">
+                <img src="{% static 'images/payments/payoneer.svg' %}" alt="Payoneer" style="height: 28px; width: auto; border-radius: 4px; background: white; padding: 2px;">
+            </div>
+        </div>
+    </div>
+</footer>

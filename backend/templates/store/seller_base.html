@@ -1,0 +1,418 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+/* ─── SELLER LAYOUT ─── */
+.seller-layout {
+    display: flex;
+    min-height: calc(100vh - 200px);
+}
+
+/* ─── SELLER SIDEBAR ─── */
+.seller-sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.seller-sidebar-profile {
+    padding: 28px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.seller-sidebar-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #e67e22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.seller-sidebar-name {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.seller-sidebar-role {
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.seller-sidebar-nav {
+    padding: 16px 0;
+    flex: 1;
+}
+
+.seller-sidebar-label {
+    color: rgba(255,255,255,0.35);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 12px 24px 8px;
+    margin-top: 8px;
+}
+
+.seller-sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 24px;
+    color: rgba(255,255,255,0.65);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    position: relative;
+}
+
+.seller-sidebar-link:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+    border-left-color: rgba(255,255,255,0.2);
+}
+
+.seller-sidebar-link.active {
+    color: #fff;
+    background: rgba(13, 110, 253, 0.15);
+    border-left-color: var(--primary);
+    font-weight: 600;
+}
+
+.seller-sidebar-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.seller-sidebar-link.active i {
+    color: var(--primary);
+}
+
+.seller-sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.seller-sidebar-footer a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255,255,255,0.45);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.seller-sidebar-footer a:hover {
+    color: #fff;
+}
+
+/* ─── SELLER CONTENT ─── */
+.seller-content {
+    flex: 1;
+    padding: 30px 35px;
+    min-width: 0;
+    background: #f8f9fc;
+}
+
+.seller-page-header {
+    margin-bottom: 28px;
+}
+
+.seller-page-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.seller-page-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+}
+
+/* ─── MOBILE SELLER TOGGLE ─── */
+.seller-mobile-toggle {
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    left: 16px;
+    z-index: 1050;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: #fff;
+    border: none;
+    font-size: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+.seller-sidebar-close {
+    display: none;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+}
+
+.seller-sidebar-close:hover {
+    color: #fff;
+}
+
+.seller-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1039;
+}
+
+/* ─── MOBILE NAV BAR (horizontal) ─── */
+.seller-mobile-nav {
+    display: none;
+    background: #1a1a2e;
+    padding: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.seller-mobile-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.seller-mobile-nav-inner {
+    display: flex;
+    gap: 0;
+    min-width: max-content;
+}
+
+.seller-mobile-nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 16px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.seller-mobile-nav-link i {
+    font-size: 18px;
+}
+
+.seller-mobile-nav-link:hover,
+.seller-mobile-nav-link.active {
+    color: #fff;
+    border-bottom-color: var(--primary);
+    background: rgba(255,255,255,0.05);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 991px) {
+    .seller-sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        height: 100vh;
+        z-index: 1040;
+        transition: left 0.3s ease;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.3);
+    }
+
+    .seller-sidebar.open {
+        left: 0;
+    }
+
+    .seller-sidebar-overlay.open {
+        display: block;
+    }
+
+    .seller-sidebar-close {
+        display: block;
+    }
+
+    .seller-mobile-nav {
+        display: block;
+    }
+
+    .seller-mobile-toggle {
+        display: flex;
+    }
+
+    .seller-content {
+        padding: 20px 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .seller-content {
+        padding: 16px 12px;
+    }
+
+    .seller-page-header h2 {
+        font-size: 18px;
+    }
+}
+</style>
+{% block seller_extra_head %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<!-- Mobile Horizontal Nav -->
+<div class="seller-mobile-nav">
+    <div class="seller-mobile-nav-inner">
+        <a href="{% url 'seller_dashboard' %}" class="seller-mobile-nav-link {% if seller_active_page == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-chart-line"></i> Dashboard
+        </a>
+        <a href="{% url 'seller_products' %}" class="seller-mobile-nav-link {% if seller_active_page == 'products' %}active{% endif %}">
+            <i class="fas fa-box"></i> Products
+        </a>
+        <a href="{% url 'add_product' %}" class="seller-mobile-nav-link {% if seller_active_page == 'add_product' %}active{% endif %}">
+            <i class="fas fa-plus-circle"></i> Add New
+        </a>
+        <a href="{% url 'seller_orders' %}" class="seller-mobile-nav-link {% if seller_active_page == 'orders' %}active{% endif %}">
+            <i class="fas fa-shopping-bag"></i> Orders
+        </a>
+        <a href="{% url 'home' %}" class="seller-mobile-nav-link">
+            <i class="fas fa-store"></i> Store
+        </a>
+    </div>
+</div>
+
+<div class="seller-layout">
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="seller-sidebar-overlay" id="sellerSidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="seller-sidebar" id="sellerSidebar">
+        <button class="seller-sidebar-close" id="sellerSidebarClose">&times;</button>
+
+        <!-- Profile -->
+        <div class="seller-sidebar-profile">
+            <div class="seller-sidebar-avatar" style="overflow: hidden; padding: 0;">
+                {% if request.user.profile.profile_pic %}
+                    <img src="{{ request.user.profile.profile_pic.url }}" alt="{{ request.user.username }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
+                {% else %}
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                        {{ request.user.first_name|default:request.user.username|make_list|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="seller-sidebar-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="seller-sidebar-role">Seller Account</div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="seller-sidebar-nav">
+            <div class="seller-sidebar-label">Main</div>
+            <a href="{% url 'seller_dashboard' %}" class="seller-sidebar-link {% if seller_active_page == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{% url 'seller_orders' %}" class="seller-sidebar-link {% if seller_active_page == 'orders' %}active{% endif %}">
+                <i class="fas fa-shopping-bag"></i> Received Orders
+            </a>
+
+            <div class="seller-sidebar-label">Products</div>
+            <a href="{% url 'seller_products' %}" class="seller-sidebar-link {% if seller_active_page == 'products' %}active{% endif %}">
+                <i class="fas fa-box"></i> My Products
+            </a>
+            <a href="{% url 'add_product' %}" class="seller-sidebar-link {% if seller_active_page == 'add_product' %}active{% endif %}">
+                <i class="fas fa-plus-circle"></i> Add New Product
+            </a>
+
+            <div class="seller-sidebar-label">Account</div>
+            <a href="{% url 'dashboard' %}" class="seller-sidebar-link">
+                <i class="fas fa-user"></i> My Account
+            </a>
+        </nav>
+
+        <!-- Footer -->
+        <div class="seller-sidebar-footer">
+            <a href="{% url 'home' %}">
+                <i class="fas fa-arrow-left"></i> Back to Store
+            </a>
+        </div>
+    </aside>
+
+    <!-- Content -->
+    <div class="seller-content">
+        {% block seller_content %}{% endblock %}
+    </div>
+</div>
+
+<!-- Mobile Toggle Button -->
+<button class="seller-mobile-toggle" id="sellerMobileToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<script>
+(function() {
+    var toggle = document.getElementById('sellerMobileToggle');
+    var sidebar = document.getElementById('sellerSidebar');
+    var overlay = document.getElementById('sellerSidebarOverlay');
+    var close = document.getElementById('sellerSidebarClose');
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    if (toggle) toggle.addEventListener('click', openSidebar);
+    if (close) close.addEventListener('click', closeSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+})();
+</script>
+{% endblock %}
+
+{% block extra_js %}
+{% block seller_extra_js %}{% endblock %}
+{% endblock %}
